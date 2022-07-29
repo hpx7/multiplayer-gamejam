@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "npx vite"
+  },
+  "dependencies": {
+    "@hathora/client-sdk": "^0.0.4",
+    "interpolation-buffer": "^1.2.5",
+    "phaser": "^3.55.2",
+    "phaser3-rex-plugins": "^1.1.71"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4",
+    "vite": "^2.9.13"
+  }
+}

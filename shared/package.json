@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "crypto-hash": "^2.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
+}
