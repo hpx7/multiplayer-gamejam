@@ -8,6 +8,7 @@ export class GameScene extends Phaser.Scene {
   private token!: string;
   private roomId!: string;
   private connection!: HathoraTransport;
+  private controls!: Phaser.Cameras.Controls.SmoothedKeyControl;
 
   constructor() {
     super("game");
@@ -51,12 +52,32 @@ export class GameScene extends Phaser.Scene {
     map.createLayer("Water", tileset);
     map.createLayer("Beach", tileset);
 
+    this.cameras.main.setBounds(0, 0, 8192, 4096);
+
+    const cursors = this.input.keyboard.createCursorKeys();
+    const controlConfig = {
+      camera: this.cameras.main,
+      left: cursors.left,
+      right: cursors.right,
+      up: cursors.up,
+      down: cursors.down,
+      zoomIn: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
+      zoomOut: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+      acceleration: 0.01,
+      maxSpeed: 1.0,
+    };
+    this.controls = new Phaser.Cameras.Controls.SmoothedKeyControl(controlConfig);
+
     this.client
       .connect(this.token, this.roomId, this.handleMessage, this.handleClose, TransportType.WebSocket)
       .then((connection) => {
         this.connection = connection;
         console.log("connected");
       });
+  }
+
+  update(time: number, delta: number): void {
+    this.controls.update(delta);
   }
 
   handleMessage(data: ArrayBuffer) {
