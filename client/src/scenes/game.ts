@@ -3,15 +3,21 @@ import InputText from "phaser3-rex-plugins/plugins/inputtext";
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 
+import { ClientMessage, ClientMessageType, Direction } from "../../../shared/messages";
+
 export class GameScene extends Phaser.Scene {
+  private encoder: TextEncoder;
+  private decoder: TextDecoder;
+
   private client!: HathoraClient;
   private token!: string;
   private roomId!: string;
   private connection!: HathoraTransport;
-  private controls!: Phaser.Cameras.Controls.FixedKeyControl;
 
   constructor() {
     super("game");
+    this.encoder = new TextEncoder();
+    this.decoder = new TextDecoder();
   }
 
   init({ client, token, roomId }: { client: HathoraClient; token: string; roomId: string }) {
@@ -46,36 +52,51 @@ export class GameScene extends Phaser.Scene {
     map.createLayer("Beach", tileset);
 
     this.cameras.main.setBounds(0, 0, 8192, 4096);
-    const cursors = this.input.keyboard.createCursorKeys();
-    const controlConfig = {
-      camera: this.cameras.main,
-      left: cursors.left,
-      right: cursors.right,
-      up: cursors.up,
-      down: cursors.down,
-      zoomIn: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
-      zoomOut: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
-      speed: 1,
-    };
-    this.controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
 
     this.client
-      .connect(this.token, this.roomId, this.handleMessage, this.handleClose, TransportType.WebSocket)
+      .connect(
+        this.token,
+        this.roomId,
+        (data) => this.handleMessage(data),
+        (err) => this.handleClose(err),
+        TransportType.WebSocket
+      )
       .then((connection) => {
         this.connection = connection;
         console.log("connected");
       });
+
+    const keys = this.input.keyboard.createCursorKeys();
+    const that = this;
+    function handleKeyEvt() {
+      let direction: Direction;
+      if (keys.up.isDown) {
+        direction = Direction.Up;
+      } else if (keys.down.isDown) {
+        direction = Direction.Down;
+      } else if (keys.right.isDown) {
+        direction = Direction.Right;
+      } else if (keys.left.isDown) {
+        direction = Direction.Left;
+      } else {
+        direction = Direction.None;
+      }
+      const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
+      console.log("sending msg", msg);
+      that.connection.write(that.encoder.encode(JSON.stringify(msg)));
+    }
+    this.input.keyboard.on("keydown", handleKeyEvt);
+    this.input.keyboard.on("keyup", handleKeyEvt);
   }
 
-  update(time: number, delta: number): void {
-    this.controls.update(delta);
-  }
+  update(time: number, delta: number): void {}
 
   handleMessage(data: ArrayBuffer) {
-    console.log("message", data);
+    const msg = JSON.parse(this.decoder.decode(data));
+    console.log("server message", msg);
   }
 
-  handleClose(e: { code: number; reason: string }) {
-    console.error("close", e);
+  handleClose(err: { code: number; reason: string }) {
+    console.error("close", err);
   }
 }
