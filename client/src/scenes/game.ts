@@ -3,15 +3,11 @@ import InputText from "phaser3-rex-plugins/plugins/inputtext";
 import { InterpolationBuffer } from "interpolation-buffer";
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
+import { SkyrimMiniGame } from "../components/skyrim";
 
-import {
-  ClientMessage,
-  ClientMessageType,
-  Direction,
-  ServerMessage,
-  ServerMessageType,
-} from "../../../shared/messages";
+import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
 import { GameState, Player } from "../../../shared/state";
+import { minigameConfig } from "../components/minigame";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -72,16 +68,68 @@ export class GameScene extends Phaser.Scene {
       .connect(
         this.token,
         this.roomId,
-        (data) => this.handleMessage(data),
-        (err) => this.handleClose(err),
+        data => this.handleMessage(data),
+        err => this.handleClose(err),
         TransportType.WebSocket
       )
-      .then((connection) => {
+      .then(connection => {
         this.connection = connection;
         console.log("connected");
       });
 
     const keys = this.input.keyboard.createCursorKeys();
+    let tempKey = this.input.keyboard.addKey("TAB"); // Get key object
+
+    let myGame: any;
+    let myApp = document.getElementById("root");
+    let myReward: number;
+
+    if (myApp) {
+      tempKey.on("down", function (event: any) {
+        let config: minigameConfig = {
+          divName: "gameDiv",
+          gameData: {
+            difficulty: "low",
+          },
+          parent: myApp,
+          onSuccess: () => {
+            console.trace("win");
+            setTimeout(() => {
+              //unload Game
+              myGame.destroy();
+              myGame = null;
+              myReward = Math.floor(Math.random() * 3) + 1;
+              console.log("my reward: ", myReward);
+            }, 2000);
+          },
+          onFail: () => {
+            console.log("fail");
+            setTimeout(() => {
+              //unload Game
+              myGame.destroy();
+              myGame = null;
+              myReward = 0;
+              console.log("my reward: ", myReward);
+            }, 2000);
+          },
+          onCancel: () => {
+            console.log("cancelled");
+
+            //unload Game
+            myGame.destroy();
+            myGame = null;
+            myReward = 0;
+            console.log("my reward: ", myReward);
+          },
+          size: { x: 1200, y: 800 },
+        };
+        if (myGame == undefined) {
+          myGame = new SkyrimMiniGame(config);
+          myGame.init();
+        }
+      });
+    }
+
     const that = this;
     function handleKeyEvt() {
       let direction: Direction;
@@ -110,7 +158,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
-    state.players.forEach((player) => {
+    state.players.forEach(player => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
@@ -152,8 +200,8 @@ export class GameScene extends Phaser.Scene {
 
 function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
   return {
-    players: to.players.map((toPlayer) => {
-      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
+    players: to.players.map(toPlayer => {
+      const fromPlayer = from.players.find(p => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
   };
