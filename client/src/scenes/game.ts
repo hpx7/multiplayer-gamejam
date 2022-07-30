@@ -19,6 +19,11 @@ export class GameScene extends Phaser.Scene {
     this.roomId = roomId;
   }
 
+  preload() {
+    this.load.tilemapTiledJSON("map", "HAT_mainmap.json");
+    this.load.image("tiles", "tiles_sheet.png");
+  }
+
   create() {
     const roomCodeConfig: InputText.IConfig = {
       text: `Room Code: ${this.roomId}`,
@@ -27,7 +32,6 @@ export class GameScene extends Phaser.Scene {
       fontSize: "20px",
       readOnly: true,
     };
-
     const inputText = new InputText(
       this,
       this.scale.width / 2,
@@ -37,6 +41,11 @@ export class GameScene extends Phaser.Scene {
       roomCodeConfig
     ).setOrigin(0.5);
     this.add.existing(inputText);
+
+    const map = this.make.tilemap({ key: "map" });
+    const tileset = map.addTilesetImage("tiles_sheet", "tiles");
+    map.createLayer("Water", tileset);
+    map.createLayer("Beach", tileset);
 
     this.client
       .connect(this.token, this.roomId, this.handleMessage, this.handleClose, TransportType.WebSocket)

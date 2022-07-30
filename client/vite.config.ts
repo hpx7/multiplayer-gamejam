@@ -10,5 +10,6 @@ export default defineConfig(({ mode }) => {
     server: { host: "0.0.0.0" },
     clearScreen: false,
     envDir: "../",
+    publicDir: "src/assets",
   };
 });
