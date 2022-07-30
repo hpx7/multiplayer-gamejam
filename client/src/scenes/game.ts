@@ -20,8 +20,12 @@ export class GameScene extends Phaser.Scene {
   private client!: HathoraClient;
   private token!: string;
   private roomId!: string;
+  private user!: object & { id: string };
+
   private connection!: HathoraTransport;
   private buffer: InterpolationBuffer<GameState> | undefined;
+
+  private players: Map<string, Phaser.GameObjects.Image> = new Map();
 
   constructor() {
     super("game");
@@ -33,11 +37,13 @@ export class GameScene extends Phaser.Scene {
     this.client = client;
     this.token = token;
     this.roomId = roomId;
+    this.user = HathoraClient.getUserFromToken(token);
   }
 
   preload() {
     this.load.tilemapTiledJSON("map", "HAT_mainmap.json");
     this.load.image("tiles", "tiles_sheet.png");
+    this.load.image("player", "pirate.png");
     this.load.audio("music", "music.mp3");
   }
 
@@ -105,11 +111,15 @@ export class GameScene extends Phaser.Scene {
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
     state.players.forEach((player) => {
-      console.log(player);
+      if (!this.players.has(player.id)) {
+        this.addPlayer(player);
+      } else {
+        this.updatePlayer(player);
+      }
     });
   }
 
-  handleMessage(data: ArrayBuffer) {
+  private handleMessage(data: ArrayBuffer) {
     const msg: ServerMessage = JSON.parse(this.decoder.decode(data));
     if (msg.type === ServerMessageType.StateUpdate) {
       if (this.buffer === undefined) {
@@ -120,8 +130,23 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  handleClose(err: { code: number; reason: string }) {
+  private handleClose(err: { code: number; reason: string }) {
     console.error("close", err);
+  }
+
+  private addPlayer({ id, x, y }: Player) {
+    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0, 0);
+    this.add.existing(sprite);
+    this.players.set(id, sprite);
+    if (id === this.user.id) {
+      this.cameras.main.startFollow(sprite);
+    }
+  }
+
+  private updatePlayer({ id, x, y }: Player) {
+    const sprite = this.players.get(id)!;
+    sprite.x = x;
+    sprite.y = y;
   }
 }
 
