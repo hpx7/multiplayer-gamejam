@@ -139,7 +139,7 @@ export class GameScene extends Phaser.Scene {
     this.add.existing(sprite);
     this.players.set(id, sprite);
     if (id === this.user.id) {
-      this.cameras.main.startFollow(sprite);
+      this.cameras.main.startFollow(sprite, true);
     }
   }
 
