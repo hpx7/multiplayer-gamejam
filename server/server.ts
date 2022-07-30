@@ -1,7 +1,7 @@
 import { register } from "@hathora/server-sdk";
 
 import { APP_SECRET } from "../shared/base.js";
-import { ClientMessage, ClientMessageType, Direction } from "../shared/messages.js";
+import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
 
 type RoomId = bigint;
@@ -63,7 +63,11 @@ function broadcastUpdates(roomId: RoomId) {
     const gameState: GameState = {
       players: game.players.map((player) => ({ id: player.id, x: player.x, y: player.y })),
     };
-    coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(gameState), "utf8"));
+    const msg: ServerMessage = {
+      type: ServerMessageType.StateUpdate,
+      state: gameState,
+    };
+    coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
   });
 }
 

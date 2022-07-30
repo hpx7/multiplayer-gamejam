@@ -1,9 +1,17 @@
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
+import { InterpolationBuffer } from "interpolation-buffer";
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 
-import { ClientMessage, ClientMessageType, Direction } from "../../../shared/messages";
+import {
+  ClientMessage,
+  ClientMessageType,
+  Direction,
+  ServerMessage,
+  ServerMessageType,
+} from "../../../shared/messages";
+import { GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -13,6 +21,7 @@ export class GameScene extends Phaser.Scene {
   private token!: string;
   private roomId!: string;
   private connection!: HathoraTransport;
+  private buffer: InterpolationBuffer<GameState> | undefined;
 
   constructor() {
     super("game");
@@ -89,14 +98,46 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keyup", handleKeyEvt);
   }
 
-  update(time: number, delta: number): void {}
+  update(): void {
+    if (this.buffer === undefined) {
+      return;
+    }
+
+    const { state } = this.buffer.getInterpolatedState(Date.now());
+    state.players.forEach((player) => {
+      console.log(player);
+    });
+  }
 
   handleMessage(data: ArrayBuffer) {
-    const msg = JSON.parse(this.decoder.decode(data));
-    console.log("server message", msg);
+    const msg: ServerMessage = JSON.parse(this.decoder.decode(data));
+    if (msg.type === ServerMessageType.StateUpdate) {
+      if (this.buffer === undefined) {
+        this.buffer = new InterpolationBuffer(msg.state, 50, lerp);
+      } else {
+        this.buffer.enqueue(msg.state, [], Date.now());
+      }
+    }
   }
 
   handleClose(err: { code: number; reason: string }) {
     console.error("close", err);
   }
+}
+
+function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
+  return {
+    players: to.players.map((toPlayer) => {
+      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
+      return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
+    }),
+  };
+}
+
+function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
+  return {
+    id: from.id,
+    x: from.x + (to.x - from.x) * pctElapsed,
+    y: from.y + (to.y - from.y) * pctElapsed,
+  };
 }
