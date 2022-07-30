@@ -22,6 +22,7 @@ export class GameScene extends Phaser.Scene {
   preload() {
     this.load.tilemapTiledJSON("map", "HAT_mainmap.json");
     this.load.image("tiles", "tiles_sheet.png");
+    this.load.audio("music", "music.mp3");
   }
 
   create() {
@@ -41,6 +42,9 @@ export class GameScene extends Phaser.Scene {
       roomCodeConfig
     ).setOrigin(0.5);
     this.add.existing(inputText);
+
+    const music = this.sound.add("music");
+    music.play();
 
     const map = this.make.tilemap({ key: "map" });
     const tileset = map.addTilesetImage("tiles_sheet", "tiles");
