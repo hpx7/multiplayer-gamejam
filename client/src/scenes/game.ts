@@ -8,7 +8,7 @@ export class GameScene extends Phaser.Scene {
   private token!: string;
   private roomId!: string;
   private connection!: HathoraTransport;
-  private controls!: Phaser.Cameras.Controls.SmoothedKeyControl;
+  private controls!: Phaser.Cameras.Controls.FixedKeyControl;
 
   constructor() {
     super("game");
@@ -34,14 +34,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: "20px",
       readOnly: true,
     };
-    const inputText = new InputText(
-      this,
-      this.scale.width / 2,
-      this.scale.height - 40,
-      300,
-      50,
-      roomCodeConfig
-    ).setOrigin(0.5);
+    const inputText = new InputText(this, this.scale.width - 125, 20, 300, 50, roomCodeConfig).setScrollFactor(0);
     this.add.existing(inputText);
 
     const music = this.sound.add("music");
@@ -53,7 +46,6 @@ export class GameScene extends Phaser.Scene {
     map.createLayer("Beach", tileset);
 
     this.cameras.main.setBounds(0, 0, 8192, 4096);
-
     const cursors = this.input.keyboard.createCursorKeys();
     const controlConfig = {
       camera: this.cameras.main,
@@ -63,10 +55,9 @@ export class GameScene extends Phaser.Scene {
       down: cursors.down,
       zoomIn: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
       zoomOut: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
-      acceleration: 0.01,
-      maxSpeed: 1.0,
+      speed: 1,
     };
-    this.controls = new Phaser.Cameras.Controls.SmoothedKeyControl(controlConfig);
+    this.controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
 
     this.client
       .connect(this.token, this.roomId, this.handleMessage, this.handleClose, TransportType.WebSocket)
