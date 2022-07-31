@@ -25,7 +25,10 @@ export class GameScene extends Phaser.Scene {
   private connection!: HathoraTransport;
   private buffer: InterpolationBuffer<GameState> | undefined;
 
-  private players: Map<string, Phaser.GameObjects.Image> = new Map();
+  private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
+
+  private facing: "down" | "up" | "left" | "right" | "idle" = "idle";
+  private animID: any = null;
 
   constructor() {
     super("game");
@@ -43,7 +46,8 @@ export class GameScene extends Phaser.Scene {
   preload() {
     this.load.tilemapTiledJSON("map", "HAT_mainmap.json");
     this.load.image("tiles", "tiles_sheet.png");
-    this.load.image("player", "pirate.png");
+    //this.load.image("player", "pirate.png");
+    this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("music", "music.mp3");
   }
 
@@ -83,23 +87,54 @@ export class GameScene extends Phaser.Scene {
 
     const keys = this.input.keyboard.createCursorKeys();
     const that = this;
-    function handleKeyEvt() {
+    const handleKeyEvt = () => {
+      let sprite;
       let direction: Direction;
+
+      if (this.animID) {
+        sprite = this.players.get(this.animID)!;
+      }
+
       if (keys.up.isDown) {
         direction = Direction.Up;
+
+        if (this.animID && this.facing != "up" && sprite) {
+          this.facing = "up";
+          sprite.anims.play("walkup");
+        }
       } else if (keys.down.isDown) {
         direction = Direction.Down;
+
+        if (this.animID && this.facing != "down" && sprite) {
+          this.facing = "down";
+          sprite.anims.play("walkdown");
+        }
       } else if (keys.right.isDown) {
         direction = Direction.Right;
+
+        if (this.animID && this.facing != "right" && sprite) {
+          this.facing = "right";
+          sprite.anims.play("walkright");
+        }
       } else if (keys.left.isDown) {
         direction = Direction.Left;
+
+        if (this.animID && this.facing != "left" && sprite) {
+          this.facing = "left";
+          sprite.anims.play("walkleft");
+        }
       } else {
         direction = Direction.None;
+
+        if (this.animID && this.facing != "idle" && sprite) {
+          this.facing = "idle";
+          sprite.anims.play("idle");
+        }
       }
       const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
       that.connection.write(that.encoder.encode(JSON.stringify(msg)));
-    }
+    };
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
   }
@@ -141,10 +176,56 @@ export class GameScene extends Phaser.Scene {
     if (id === this.user.id) {
       this.cameras.main.startFollow(sprite, true);
     }
+    this.anims.create({
+      key: "walkdown",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkup",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 4,
+        end: 7,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkright",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 8,
+        end: 11,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkleft",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 12,
+        end: 15,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "idle",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 0,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
   }
 
   private updatePlayer({ id, x, y }: Player) {
     const sprite = this.players.get(id)!;
+    if (!this.animID) this.animID = id;
     sprite.x = x;
     sprite.y = y;
   }
