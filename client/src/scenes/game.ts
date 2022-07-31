@@ -4,13 +4,7 @@ import { InterpolationBuffer } from "interpolation-buffer";
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 
-import {
-  ClientMessage,
-  ClientMessageType,
-  Direction,
-  ServerMessage,
-  ServerMessageType,
-} from "../../../shared/messages";
+import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
 import { GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
@@ -76,11 +70,11 @@ export class GameScene extends Phaser.Scene {
       .connect(
         this.token,
         this.roomId,
-        (data) => this.handleMessage(data),
-        (err) => this.handleClose(err),
+        data => this.handleMessage(data),
+        err => this.handleClose(err),
         TransportType.WebSocket
       )
-      .then((connection) => {
+      .then(connection => {
         this.connection = connection;
         console.log("connected");
       });
@@ -97,39 +91,14 @@ export class GameScene extends Phaser.Scene {
 
       if (keys.up.isDown) {
         direction = Direction.Up;
-
-        if (this.animID && this.facing != "up" && sprite) {
-          this.facing = "up";
-          sprite.anims.play("walkup");
-        }
       } else if (keys.down.isDown) {
         direction = Direction.Down;
-
-        if (this.animID && this.facing != "down" && sprite) {
-          this.facing = "down";
-          sprite.anims.play("walkdown");
-        }
       } else if (keys.right.isDown) {
         direction = Direction.Right;
-
-        if (this.animID && this.facing != "right" && sprite) {
-          this.facing = "right";
-          sprite.anims.play("walkright");
-        }
       } else if (keys.left.isDown) {
         direction = Direction.Left;
-
-        if (this.animID && this.facing != "left" && sprite) {
-          this.facing = "left";
-          sprite.anims.play("walkleft");
-        }
       } else {
         direction = Direction.None;
-
-        if (this.animID && this.facing != "idle" && sprite) {
-          this.facing = "idle";
-          sprite.anims.play("idle");
-        }
       }
       const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
@@ -145,7 +114,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
-    state.players.forEach((player) => {
+    state.players.forEach(player => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
@@ -226,6 +195,39 @@ export class GameScene extends Phaser.Scene {
   private updatePlayer({ id, x, y }: Player) {
     const sprite = this.players.get(id)!;
     if (!this.animID) this.animID = id;
+    if (x < sprite.x) {
+      //left
+
+      if (this.animID && this.facing != "left" && sprite) {
+        this.facing = "left";
+        sprite.anims.play("walkleft");
+      }
+    } else if (x > sprite.x) {
+      //right
+      if (this.animID && this.facing != "right" && sprite) {
+        this.facing = "right";
+        sprite.anims.play("walkright");
+      }
+    } else if (y > sprite.y) {
+      //down
+      if (this.animID && this.facing != "down" && sprite) {
+        this.facing = "down";
+        sprite.anims.play("walkdown");
+      }
+    } else if (y < sprite.y) {
+      //up
+      if (this.animID && this.facing != "up" && sprite) {
+        this.facing = "up";
+        sprite.anims.play("walkup");
+      }
+    } else {
+      //idle
+
+      if (this.animID && this.facing != "idle" && sprite) {
+        this.facing = "idle";
+        sprite.anims.play("idle");
+      }
+    }
     sprite.x = x;
     sprite.y = y;
   }
@@ -233,8 +235,8 @@ export class GameScene extends Phaser.Scene {
 
 function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
   return {
-    players: to.players.map((toPlayer) => {
-      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
+    players: to.players.map(toPlayer => {
+      const fromPlayer = from.players.find(p => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
   };
