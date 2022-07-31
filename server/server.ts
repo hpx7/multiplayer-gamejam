@@ -82,27 +82,23 @@ setInterval(() => {
   states.forEach(({ game }, roomId) => {
     game.players.forEach((player) => {
       if (player.direction === Direction.Up) {
-        const nextSpot = player.y - PLAYER_SPEED;
-        const nextTile = getTilecoord(player.x, nextSpot);
-        if (isTileBeach(nextTile)) {
+        const nextTile = pixelToTile(player.x, player.y - PLAYER_SPEED);
+        if (isBeachTile(nextTile)) {
           player.y -= PLAYER_SPEED;
         }
       } else if (player.direction === Direction.Down) {
-        const nextSpot = player.y + PLAYER_SPEED;
-        const nextTile = getTilecoord(player.x, nextSpot);
-        if (isTileBeach(nextTile)) {
+        const nextTile = pixelToTile(player.x, player.y + PLAYER_SPEED);
+        if (isBeachTile(nextTile)) {
           player.y += PLAYER_SPEED;
         }
       } else if (player.direction === Direction.Right) {
-        const nextSpot = player.x + PLAYER_SPEED;
-        const nextTile = getTilecoord(nextSpot, player.y);
-        if (isTileBeach(nextTile)) {
+        const nextTile = pixelToTile(player.x + PLAYER_SPEED, player.y);
+        if (isBeachTile(nextTile)) {
           player.x += PLAYER_SPEED;
         }
       } else if (player.direction === Direction.Left) {
-        const nextSpot = player.x - PLAYER_SPEED;
-        const nextTile = getTilecoord(nextSpot, player.y);
-        if (isTileBeach(nextTile)) {
+        const nextTile = pixelToTile(player.x - PLAYER_SPEED, player.y);
+        if (isBeachTile(nextTile)) {
           player.x -= PLAYER_SPEED;
         }
       }
@@ -111,13 +107,12 @@ setInterval(() => {
   });
 }, 50);
 
-const getTilecoord = (ptx: number, pty: number): { x: number; y: number } => {
-  return { x: Math.floor(ptx / 64), y: Math.floor(pty / 64) };
+const pixelToTile = (x: number, y: number): { x: number; y: number } => {
+  return { x: Math.floor(x / 64), y: Math.floor(y / 64) };
 };
 
-const isTileBeach = (tile: { x: number; y: number }): boolean => {
-  //lookup which array index of tile is map data referring too
+const isBeachTile = (tile: { x: number; y: number }): boolean => {
+  // lookup which array index of tile is map data referring too
   const arrayIndex = tile.y * 128 + tile.x;
-
   return mapData.layers[1].data[arrayIndex] != 0;
 };
