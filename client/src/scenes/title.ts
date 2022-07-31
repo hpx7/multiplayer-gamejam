@@ -7,8 +7,14 @@ export class TitleScene extends Phaser.Scene {
     super("title");
   }
 
+  preload() {
+    this.load.audio("music", "title_music.mp3");
+  }
+
   create() {
     const client = new HathoraClient(import.meta.env.APP_ID);
+
+    this.sound.play("music", { loop: true, volume: 0.25 });
 
     getToken(client).then((token) => {
       const url = window.location === window.parent.location ? document.location.href : document.referrer;
