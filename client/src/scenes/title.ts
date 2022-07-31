@@ -2,9 +2,9 @@ import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 import { HathoraClient } from "@hathora/client-sdk";
 
-export class LobbyScene extends Phaser.Scene {
+export class TitleScene extends Phaser.Scene {
   constructor() {
-    super("lobby");
+    super("title");
   }
 
   create() {
