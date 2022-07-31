@@ -2,15 +2,13 @@ import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 import { HathoraClient } from "@hathora/client-sdk";
 
-import { APP_ID } from "../../../shared/base";
-
 export class LobbyScene extends Phaser.Scene {
   constructor() {
     super("lobby");
   }
 
   create() {
-    const client = new HathoraClient(APP_ID);
+    const client = new HathoraClient(import.meta.env.APP_ID);
 
     getToken(client).then((token) => {
       const url = window.location === window.parent.location ? document.location.href : document.referrer;

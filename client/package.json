@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "start": "npx vite"
+    "start": "npx vite",
+    "build": "npx vite build"
   },
   "dependencies": {
     "@hathora/client-sdk": "^0.0.4",
