@@ -19,7 +19,7 @@ type ServerState = {
 };
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 if (process.env.APP_SECRET === undefined) {
   throw new Error("APP_SECRET must be set");
 }
