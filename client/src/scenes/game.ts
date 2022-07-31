@@ -4,6 +4,7 @@ import { InterpolationBuffer } from "interpolation-buffer";
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 
+import mapUrl from "../../../shared/HAT_mainmap.json";
 import {
   ClientMessage,
   ClientMessageType,
@@ -41,7 +42,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.tilemapTiledJSON("map", "HAT_mainmap.json");
+    this.load.tilemapTiledJSON("map", mapUrl);
     this.load.image("tiles", "tiles_sheet.png");
     this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("music", "music.mp3");

@@ -1,10 +1,9 @@
 import { register } from "@hathora/server-sdk";
+import dotenv from "dotenv";
 
 import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
-import dotenv from "dotenv";
-
-import mapData from "../client/src/assets/HAT_mainmap.json" assert { type: "json" };
+import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 
 type RoomId = bigint;
 type UserId = string;
