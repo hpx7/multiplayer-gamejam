@@ -1,8 +1,8 @@
 import { register } from "@hathora/server-sdk";
 
-import { APP_SECRET } from "../shared/base.js";
 import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
+import dotenv from "dotenv";
 
 type RoomId = bigint;
 type UserId = string;
@@ -19,8 +19,13 @@ type ServerState = {
 };
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
+dotenv.config();
+if (process.env.APP_SECRET === undefined) {
+  throw new Error("APP_SECRET must be set");
+}
+
 const coordinator = await register({
-  appSecret: APP_SECRET,
+  appSecret: process.env.APP_SECRET,
   authInfo: { anonymous: { separator: "-" } },
   store: {
     newState(roomId, userId, data) {
