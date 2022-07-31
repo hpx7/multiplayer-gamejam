@@ -4,6 +4,8 @@ import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessa
 import { GameState } from "../shared/state.js";
 import dotenv from "dotenv";
 
+import mapData from "../client/src/assets/HAT_mainmap.json" assert { type: "json" };
+
 type RoomId = bigint;
 type UserId = string;
 
@@ -37,7 +39,7 @@ const coordinator = await register({
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
-        game.players.push({ id: userId, x: 300, y: 300, direction: Direction.None });
+        game.players.push({ id: userId, x: 650, y: 550, direction: Direction.None });
       }
     },
     unsubscribeUser(roomId, userId) {
@@ -80,15 +82,37 @@ setInterval(() => {
   states.forEach(({ game }, roomId) => {
     game.players.forEach((player) => {
       if (player.direction === Direction.Up) {
-        player.y -= PLAYER_SPEED;
+        const nextTile = pixelToTile(player.x, player.y - PLAYER_SPEED);
+        if (isBeachTile(nextTile)) {
+          player.y -= PLAYER_SPEED;
+        }
       } else if (player.direction === Direction.Down) {
-        player.y += PLAYER_SPEED;
+        const nextTile = pixelToTile(player.x, player.y + PLAYER_SPEED);
+        if (isBeachTile(nextTile)) {
+          player.y += PLAYER_SPEED;
+        }
       } else if (player.direction === Direction.Right) {
-        player.x += PLAYER_SPEED;
+        const nextTile = pixelToTile(player.x + PLAYER_SPEED, player.y);
+        if (isBeachTile(nextTile)) {
+          player.x += PLAYER_SPEED;
+        }
       } else if (player.direction === Direction.Left) {
-        player.x -= PLAYER_SPEED;
+        const nextTile = pixelToTile(player.x - PLAYER_SPEED, player.y);
+        if (isBeachTile(nextTile)) {
+          player.x -= PLAYER_SPEED;
+        }
       }
     });
     broadcastUpdates(roomId);
   });
 }, 50);
+
+const pixelToTile = (x: number, y: number): { x: number; y: number } => {
+  return { x: Math.floor(x / 64), y: Math.floor(y / 64) };
+};
+
+const isBeachTile = (tile: { x: number; y: number }): boolean => {
+  // lookup which array index of tile is map data referring too
+  const arrayIndex = tile.y * 128 + tile.x;
+  return mapData.layers[1].data[arrayIndex] != 0;
+};
