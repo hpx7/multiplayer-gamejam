@@ -6,6 +6,7 @@ on:
 
 env:
   APP_SECRET: ${{ secrets.APP_SECRET }}
+  APP_ID: 7618e69eae1004611859f8b2d14c53ccad90a87f4d1444ef445b958e935d8594
 
 jobs:
   server:
