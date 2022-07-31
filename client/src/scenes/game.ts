@@ -45,7 +45,7 @@ export class GameScene extends Phaser.Scene {
     this.load.tilemapTiledJSON("map", mapUrl);
     this.load.image("tiles", "tiles_sheet.png");
     this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
-    this.load.audio("music", "game_music.mp3");
+    this.load.audio("game-music", "game_music.mp3");
   }
 
   create() {
@@ -59,7 +59,12 @@ export class GameScene extends Phaser.Scene {
     const inputText = new InputText(this, this.scale.width - 125, 20, 300, 50, roomCodeConfig).setScrollFactor(0);
     this.add.existing(inputText);
 
-    this.sound.play("music", { loop: true, volume: 0.25 });
+    const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
+    music.play();
+
+    this.events.on("shutdown", () => {
+      music.stop();
+    });
 
     const map = this.make.tilemap({ key: "map" });
     const tileset = map.addTilesetImage("tiles_sheet", "tiles");
