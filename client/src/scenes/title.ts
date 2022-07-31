@@ -1,6 +1,6 @@
-import InputText from "phaser3-rex-plugins/plugins/inputtext";
-import Phaser from "phaser";
 import { HathoraClient } from "@hathora/client-sdk";
+import Phaser from "phaser";
+import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 export class TitleScene extends Phaser.Scene {
   constructor() {

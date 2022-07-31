@@ -1,10 +1,10 @@
-import InputText from "phaser3-rex-plugins/plugins/inputtext";
-import Phaser from "phaser";
-import { InterpolationBuffer } from "interpolation-buffer";
-import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 import { HathoraClient } from "@hathora/client-sdk";
+import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
+import { InterpolationBuffer } from "interpolation-buffer";
+import Phaser from "phaser";
+import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
-import { GameState, Player } from "../../../shared/state";
+import mapUrl from "../../../shared/HAT_mainmap.json";
 import {
   ClientMessage,
   ClientMessageType,
@@ -12,7 +12,7 @@ import {
   ServerMessage,
   ServerMessageType,
 } from "../../../shared/messages";
-import mapUrl from "../../../shared/HAT_mainmap.json";
+import { GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
