@@ -202,6 +202,7 @@ export class GameScene extends Phaser.Scene {
     }
     sprite.x = x;
     sprite.y = y;
+    //let's test my tile currently
   }
 }
 
