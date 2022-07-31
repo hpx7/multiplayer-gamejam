@@ -1,8 +1,8 @@
-import Phaser from "phaser";
-import InputText from "phaser3-rex-plugins/plugins/inputtext";
-import { InterpolationBuffer } from "interpolation-buffer";
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
+import { InterpolationBuffer } from "interpolation-buffer";
+import Phaser from "phaser";
+import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
 import {
@@ -96,6 +96,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         direction = Direction.None;
       }
+
       const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
       this.connection.write(this.encoder.encode(JSON.stringify(msg)));
