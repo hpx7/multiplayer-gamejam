@@ -1,10 +1,10 @@
-import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
+import Phaser from "phaser";
 import { InterpolationBuffer } from "interpolation-buffer";
-import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
+import { HathoraClient } from "@hathora/client-sdk";
 
-import mapUrl from "../../../shared/HAT_mainmap.json";
+import { GameState, Player } from "../../../shared/state";
 import {
   ClientMessage,
   ClientMessageType,
@@ -12,7 +12,7 @@ import {
   ServerMessage,
   ServerMessageType,
 } from "../../../shared/messages";
-import { GameState, Player } from "../../../shared/state";
+import mapUrl from "../../../shared/HAT_mainmap.json";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -96,6 +96,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         direction = Direction.None;
       }
+
       const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
       this.connection.write(this.encoder.encode(JSON.stringify(msg)));

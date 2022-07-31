@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
-import { GameScene } from "./scenes/game";
 import { TitleScene } from "./scenes/title";
+import { GameScene } from "./scenes/game";
 
 new Phaser.Game({
   type: Phaser.AUTO,
