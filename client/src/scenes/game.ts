@@ -25,7 +25,7 @@ export class GameScene extends Phaser.Scene {
   private connection!: HathoraTransport;
   private buffer: InterpolationBuffer<GameState> | undefined;
 
-  private players: Map<string, Phaser.GameObjects.Image> = new Map();
+  private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
 
   constructor() {
     super("game");
@@ -43,7 +43,7 @@ export class GameScene extends Phaser.Scene {
   preload() {
     this.load.tilemapTiledJSON("map", "HAT_mainmap.json");
     this.load.image("tiles", "tiles_sheet.png");
-    this.load.image("player", "pirate.png");
+    this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("music", "music.mp3");
   }
 
@@ -82,8 +82,7 @@ export class GameScene extends Phaser.Scene {
       });
 
     const keys = this.input.keyboard.createCursorKeys();
-    const that = this;
-    function handleKeyEvt() {
+    const handleKeyEvt = () => {
       let direction: Direction;
       if (keys.up.isDown) {
         direction = Direction.Up;
@@ -98,8 +97,8 @@ export class GameScene extends Phaser.Scene {
       }
       const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
-      that.connection.write(that.encoder.encode(JSON.stringify(msg)));
-    }
+      this.connection.write(this.encoder.encode(JSON.stringify(msg)));
+    };
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
   }
@@ -141,10 +140,66 @@ export class GameScene extends Phaser.Scene {
     if (id === this.user.id) {
       this.cameras.main.startFollow(sprite, true);
     }
+    this.anims.create({
+      key: "walkdown",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkup",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 4,
+        end: 7,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkright",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 8,
+        end: 11,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkleft",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 12,
+        end: 15,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "idle",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 0,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
   }
 
   private updatePlayer({ id, x, y }: Player) {
     const sprite = this.players.get(id)!;
+    if (x < sprite.x) {
+      sprite.anims.play("walkleft", true);
+    } else if (x > sprite.x) {
+      sprite.anims.play("walkright", true);
+    } else if (y > sprite.y) {
+      sprite.anims.play("walkdown", true);
+    } else if (y < sprite.y) {
+      sprite.anims.play("walkup", true);
+    } else {
+      sprite.anims.play("idle");
+    }
     sprite.x = x;
     sprite.y = y;
   }
