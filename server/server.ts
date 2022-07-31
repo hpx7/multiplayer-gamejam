@@ -38,7 +38,7 @@ const coordinator = await register({
       console.log("subscribeUser", roomId.toString(36), userId);
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
-      if (!game.players.some(player => player.id === userId)) {
+      if (!game.players.some((player) => player.id === userId)) {
         game.players.push({ id: userId, x: 650, y: 550, direction: Direction.None });
       }
     },
@@ -55,7 +55,7 @@ const coordinator = await register({
       const { game } = states.get(roomId)!;
       const message: ClientMessage = JSON.parse(dataStr);
       if (message.type === ClientMessageType.SetDirection) {
-        const player = game.players.find(p => p.id === userId);
+        const player = game.players.find((p) => p.id === userId);
         if (player !== undefined) {
           player.direction = message.direction;
         }
@@ -66,9 +66,9 @@ const coordinator = await register({
 
 function broadcastUpdates(roomId: RoomId) {
   const { subscribers, game } = states.get(roomId)!;
-  subscribers.forEach(userId => {
+  subscribers.forEach((userId) => {
     const gameState: GameState = {
-      players: game.players.map(player => ({ id: player.id, x: player.x, y: player.y })),
+      players: game.players.map((player) => ({ id: player.id, x: player.x, y: player.y })),
     };
     const msg: ServerMessage = {
       type: ServerMessageType.StateUpdate,
@@ -80,26 +80,31 @@ function broadcastUpdates(roomId: RoomId) {
 
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
-    game.players.forEach(player => {
+    game.players.forEach((player) => {
       if (player.direction === Direction.Up) {
-        //test for collision
-        const nextspot = player.y - PLAYER_SPEED;
-        const nextTile = getTilecoord(player.x, nextspot);
-        if (isTileBeach(nextTile)) player.y -= PLAYER_SPEED;
+        const nextSpot = player.y - PLAYER_SPEED;
+        const nextTile = getTilecoord(player.x, nextSpot);
+        if (isTileBeach(nextTile)) {
+          player.y -= PLAYER_SPEED;
+        }
       } else if (player.direction === Direction.Down) {
-        //test for collision
-        const nextspot = player.y + PLAYER_SPEED;
-        const nextTile = getTilecoord(player.x, nextspot);
-        if (isTileBeach(nextTile)) player.y += PLAYER_SPEED;
+        const nextSpot = player.y + PLAYER_SPEED;
+        const nextTile = getTilecoord(player.x, nextSpot);
+        if (isTileBeach(nextTile)) {
+          player.y += PLAYER_SPEED;
+        }
       } else if (player.direction === Direction.Right) {
-        //test for collision
-        const nextspot = player.x + PLAYER_SPEED;
-        const nextTile = getTilecoord(nextspot, player.y);
-        if (isTileBeach(nextTile)) player.x += PLAYER_SPEED;
+        const nextSpot = player.x + PLAYER_SPEED;
+        const nextTile = getTilecoord(nextSpot, player.y);
+        if (isTileBeach(nextTile)) {
+          player.x += PLAYER_SPEED;
+        }
       } else if (player.direction === Direction.Left) {
-        const nextspot = player.x - PLAYER_SPEED;
-        const nextTile = getTilecoord(nextspot, player.y);
-        if (isTileBeach(nextTile)) player.x -= PLAYER_SPEED;
+        const nextSpot = player.x - PLAYER_SPEED;
+        const nextTile = getTilecoord(nextSpot, player.y);
+        if (isTileBeach(nextTile)) {
+          player.x -= PLAYER_SPEED;
+        }
       }
     });
     broadcastUpdates(roomId);
