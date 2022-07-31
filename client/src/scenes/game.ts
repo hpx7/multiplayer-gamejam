@@ -276,6 +276,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.animID) this.animID = id;
     sprite.x = x;
     sprite.y = y;
+    //let's test my tile currently
   }
 }
 
