@@ -1,7 +1,6 @@
 import { Direction } from "../shared/messages.js";
-import { GameState } from "../shared/state.js";
 
-import { getRandomElement, isBeachTile } from "./utils.js";
+import { getRandomElement, isBeachTile, ServerState } from "./utils.js";
 
 export default class NPC {
   // hack, copied over to make this a valid ServerPlayer since depending on it
@@ -23,7 +22,7 @@ export default class NPC {
     return new NPC(startingTile.x, startingTile.y);
   }
 
-  public makeMoves(state: GameState, nextTile: { x: number; y: number }) {
+  public makeMoves(state: ServerState, nextTile: { x: number; y: number }) {
     if (this.direction === Direction.None || !isBeachTile(nextTile) || Math.random() < 0.01) {
       this.direction = getRandomAdjacentDirection(this.direction);
     }

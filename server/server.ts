@@ -6,7 +6,7 @@ import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessa
 import { GameState } from "../shared/state.js";
 
 import NPC from "./npc.js";
-import { isBeachTile } from "./utils.js";
+import { isBeachTile, ServerPlayer, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
@@ -14,16 +14,6 @@ type UserId = string;
 const PLAYER_SPEED = 10;
 const NUM_NPCS = 100; //TODO: change lol
 
-type ServerPlayer = {
-  isNpc: boolean;
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-};
-type ServerState = {
-  players: ServerPlayer[];
-};
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
 dotenv.config({ path: "../.env" });

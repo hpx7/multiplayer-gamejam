@@ -1,4 +1,16 @@
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
+import { Direction } from "../shared/messages";
+
+export type ServerPlayer = {
+  isNpc: boolean;
+  id: string;
+  x: number;
+  y: number;
+  direction: Direction;
+};
+export type ServerState = {
+  players: ServerPlayer[];
+};
 
 export const isBeachTile = (tile: { x: number; y: number }): boolean => {
   // lookup which array index of tile is map data referring too
