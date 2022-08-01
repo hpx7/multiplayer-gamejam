@@ -2,22 +2,19 @@ import { register } from "@hathora/server-sdk";
 import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
-import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
+import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
+
+import AbstractServerPlayer from "./player/abstractServerPlayer.js";
+import NPC from "./player/npc.js";
+import RealPlayer from "./player/realPlayer.js";
+import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
 
-const PLAYER_SPEED = 10;
-type ServerPlayer = {
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-};
-type ServerState = {
-  players: ServerPlayer[];
-};
+const NUM_NPCS = 100; //TODO: change lol
+
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
 dotenv.config({ path: "../.env" });
@@ -31,14 +28,17 @@ const coordinator = await register({
   store: {
     newState(roomId, userId, data) {
       console.log("newState", roomId.toString(36), userId, data);
-      states.set(roomId, { subscribers: new Set(), game: { players: [] } });
+      states.set(roomId, {
+        subscribers: new Set(),
+        game: { players: generateNPCs(NUM_NPCS) },
+      });
     },
     subscribeUser(roomId, userId) {
       console.log("subscribeUser", roomId.toString(36), userId);
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
-        game.players.push({ id: userId, x: 650, y: 550, direction: Direction.None });
+        game.players.push(RealPlayer.create(userId, getRandomBeachPixel()));
       }
     },
     unsubscribeUser(roomId, userId) {
@@ -85,38 +85,28 @@ function broadcastUpdates(roomId: RoomId) {
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
     game.players.forEach((player) => {
-      if (player.direction === Direction.Up) {
-        const nextTile = pixelToTile(player.x, player.y - PLAYER_SPEED);
-        if (isBeachTile(nextTile)) {
-          player.y -= PLAYER_SPEED;
-        }
-      } else if (player.direction === Direction.Down) {
-        const nextTile = pixelToTile(player.x, player.y + PLAYER_SPEED);
-        if (isBeachTile(nextTile)) {
-          player.y += PLAYER_SPEED;
-        }
-      } else if (player.direction === Direction.Right) {
-        const nextTile = pixelToTile(player.x + PLAYER_SPEED, player.y);
-        if (isBeachTile(nextTile)) {
-          player.x += PLAYER_SPEED;
-        }
-      } else if (player.direction === Direction.Left) {
-        const nextTile = pixelToTile(player.x - PLAYER_SPEED, player.y);
-        if (isBeachTile(nextTile)) {
-          player.x -= PLAYER_SPEED;
-        }
+      if (player.isNpc) {
+        (player as NPC).applyNpcAlgorithm(game);
       }
+      player.update();
     });
     broadcastUpdates(roomId);
   });
 }, 50);
 
-const pixelToTile = (x: number, y: number): { x: number; y: number } => {
-  return { x: Math.floor(x / 64), y: Math.floor(y / 64) };
-};
+function getRandomBeachPixel(): { x: number; y: number } {
+  let pixel = undefined;
+  while (pixel == null || !isBeachTile(pixelToTile(pixel.x, pixel.y))) {
+    pixel = {
+      x: Math.floor(Math.random() * mapData.width * mapData.tilewidth),
+      y: Math.floor(Math.random() * mapData.height * mapData.tileheight),
+    };
+  }
+  return pixel;
+}
 
-const isBeachTile = (tile: { x: number; y: number }): boolean => {
-  // lookup which array index of tile is map data referring too
-  const arrayIndex = tile.y * 128 + tile.x;
-  return mapData.layers[1].data[arrayIndex] != 0;
-};
+function generateNPCs(numNPCs: number): AbstractServerPlayer[] {
+  return Array(numNPCs)
+    .fill(undefined)
+    .map(() => NPC.create(getRandomBeachPixel()));
+}

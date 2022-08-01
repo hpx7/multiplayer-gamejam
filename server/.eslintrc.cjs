@@ -11,7 +11,7 @@ module.exports = {
   },
   plugins: ["@typescript-eslint", "eslint-plugin-import", "prettier"],
   rules: {
-    indent: ["error", 2],
+    indent: ["error", 2, { SwitchCase: 1 }],
     quotes: ["error", "double"],
     semi: ["error", "always"],
     curly: ["error"],
