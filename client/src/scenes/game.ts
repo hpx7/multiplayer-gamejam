@@ -1,5 +1,3 @@
-import { checkServerIdentity } from "tls";
-
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
@@ -14,7 +12,7 @@ import {
   ServerMessage,
   ServerMessageType,
 } from "../../../shared/messages";
-import { Chest, GameState, Player } from "../../../shared/state";
+import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -29,7 +27,8 @@ export class GameScene extends Phaser.Scene {
   private buffer: InterpolationBuffer<GameState> | undefined;
 
   private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
-  private chests: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private chests: Map<string, { difficulty: Difficulty; reward: number; object: Phaser.GameObjects.Sprite }> =
+    new Map();
 
   constructor() {
     super("game");
@@ -159,7 +158,7 @@ export class GameScene extends Phaser.Scene {
     const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
 
     this.add.existing(chestSprite);
-    this.chests.set(id, chestSprite);
+    this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
     this.anims.create({
       key: "open",
       frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
@@ -258,13 +257,3 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     dir: to.dir,
   };
 }
-
-const pixelToTile = (x: number, y: number): { x: number; y: number } => {
-  return { x: Math.floor(x / 64), y: Math.floor(y / 64) };
-};
-
-const isBeachTile = (tile: { x: number; y: number }): boolean => {
-  // lookup which array index of tile is map data referring too
-  const arrayIndex = tile.y * 128 + tile.x;
-  return mapUrl.layers[1].data[arrayIndex] != 0;
-};

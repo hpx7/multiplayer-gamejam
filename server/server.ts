@@ -2,7 +2,7 @@ import { register } from "@hathora/server-sdk";
 import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
-import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
+import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { Chest, Difficulty, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
@@ -14,18 +14,6 @@ type RoomId = bigint;
 type UserId = string;
 const numChests = 15;
 
-const PLAYER_SPEED = 10;
-type ServerPlayer = {
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-};
-
-/* type ServerState = {
-  players: ServerPlayer[];
-  chests: Chest[];
-}; */
 const NUM_NPCS = 100; //TODO: change lol
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
@@ -52,7 +40,7 @@ const coordinator = await register({
           };
         } while (!isBeachTile(newSpot));
         let newReward = 1 + Math.floor(Math.random() * 3);
-        let tempDiff = Math.floor(Math.random() * 3);
+
         let newDifficulty: Difficulty = Math.floor(Math.random() * 3);
         let newID = Math.random().toString(36).substring(2);
         tempChestArray.push({
