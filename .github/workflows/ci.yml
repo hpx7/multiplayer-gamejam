@@ -18,7 +18,7 @@ jobs:
         uses: wearerequired/lint-action@v2
         with:
           eslint: true
-          eslint_dir: client
+          eslint_dir: client/src
           eslint_extensions: js,jsx,ts,tsx
           auto_fix: true
 
