@@ -1,28 +1,22 @@
-import { Direction } from "../shared/messages.js";
+import { Direction } from "../../shared/messages.js";
+import { assertNever, getNextTile, getRandomElement, isBeachTile, ServerState } from "../utils.js";
 
-import { getRandomElement, isBeachTile, ServerState } from "./utils.js";
+import AbstractServerPlayer from "./abstractServerPlayer.js";
 
-export default class NPC {
-  // hack, copied over to make this a valid ServerPlayer since depending on it
-  // would make a circular dependency--maybe should clean up later
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
+export default class NPC extends AbstractServerPlayer {
   isNpc: true = true;
 
   private constructor(x: number, y: number) {
-    this.id = Math.random().toString(36).substring(2);
-    this.x = x;
-    this.y = y;
-    this.direction = Direction.None;
+    super(Math.random().toString(36).substring(2), x, y);
   }
 
   public static create(startingTile: { x: number; y: number }) {
     return new NPC(startingTile.x, startingTile.y);
   }
 
-  public makeMoves(state: ServerState, nextTile: { x: number; y: number }) {
+  // eslint-disable-next-line no-unused-vars
+  public applyNpcAlgorithm(_state: ServerState) {
+    const nextTile = getNextTile(this.x, this.y, this.direction);
     if (this.direction === Direction.None || !isBeachTile(nextTile) || Math.random() < 0.01) {
       this.direction = getRandomAdjacentDirection(this.direction);
     }
@@ -39,5 +33,7 @@ function getRandomAdjacentDirection(direction: Direction): Direction {
       return getRandomElement([Direction.Up, Direction.Down]);
     case Direction.None:
       return getRandomElement([Direction.Left, Direction.Right, Direction.Down, Direction.Up]);
+    default:
+      assertNever(direction);
   }
 }

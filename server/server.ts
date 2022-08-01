@@ -2,16 +2,17 @@ import { register } from "@hathora/server-sdk";
 import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
-import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
+import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
 
-import NPC from "./npc.js";
-import { isBeachTile, ServerPlayer, ServerState } from "./utils.js";
+import AbstractServerPlayer from "./player/abstractServerPlayer.js";
+import NPC from "./player/npc.js";
+import RealPlayer from "./player/realPlayer.js";
+import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
 
-const PLAYER_SPEED = 10;
 const NUM_NPCS = 100; //TODO: change lol
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
@@ -37,13 +38,7 @@ const coordinator = await register({
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
-        game.players.push({
-          id: userId,
-          x: 650,
-          y: 550,
-          direction: Direction.None,
-          isNpc: false,
-        });
+        game.players.push(RealPlayer.create(userId, getRandomBeachPixel()));
       }
     },
     unsubscribeUser(roomId, userId) {
@@ -90,50 +85,14 @@ function broadcastUpdates(roomId: RoomId) {
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
     game.players.forEach((player) => {
-      const nextTile = getNextTile(player.x, player.y, player.direction);
       if (player.isNpc) {
-        (player as NPC).makeMoves(game, nextTile);
+        (player as NPC).applyNpcAlgorithm(game);
       }
-      if (player.direction === Direction.Up) {
-        if (isBeachTile(nextTile)) {
-          player.y -= PLAYER_SPEED;
-        }
-      } else if (player.direction === Direction.Down) {
-        if (isBeachTile(nextTile)) {
-          player.y += PLAYER_SPEED;
-        }
-      } else if (player.direction === Direction.Right) {
-        if (isBeachTile(nextTile)) {
-          player.x += PLAYER_SPEED;
-        }
-      } else if (player.direction === Direction.Left) {
-        if (isBeachTile(nextTile)) {
-          player.x -= PLAYER_SPEED;
-        }
-      }
+      player.update();
     });
     broadcastUpdates(roomId);
   });
 }, 50);
-
-const pixelToTile = (x: number, y: number): { x: number; y: number } => {
-  return { x: Math.floor(x / mapData.tilewidth), y: Math.floor(y / mapData.tileheight) };
-};
-
-function getNextTile(x: number, y: number, direction: Direction): { x: number; y: number } {
-  switch (direction) {
-    case Direction.Up:
-      return pixelToTile(x, y - PLAYER_SPEED);
-    case Direction.Down:
-      return pixelToTile(x, y + PLAYER_SPEED);
-    case Direction.Left:
-      return pixelToTile(x - PLAYER_SPEED, y);
-    case Direction.Right:
-      return pixelToTile(x + PLAYER_SPEED, y);
-    case Direction.None:
-      return { x, y };
-  }
-}
 
 function getRandomBeachPixel(): { x: number; y: number } {
   let pixel = undefined;
@@ -146,7 +105,7 @@ function getRandomBeachPixel(): { x: number; y: number } {
   return pixel;
 }
 
-function generateNPCs(numNPCs: number): ServerPlayer[] {
+function generateNPCs(numNPCs: number): AbstractServerPlayer[] {
   return Array(numNPCs)
     .fill(undefined)
     .map(() => NPC.create(getRandomBeachPixel()));
