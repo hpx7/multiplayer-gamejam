@@ -1,12 +1,19 @@
+import { checkServerIdentity } from "tls";
+
 import { HathoraClient } from "@hathora/client-sdk";
 import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
-import { checkServerIdentity } from "tls";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
-import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
+import {
+  ClientMessage,
+  ClientMessageType,
+  Direction,
+  ServerMessage,
+  ServerMessageType,
+} from "../../../shared/messages";
 import { Chest, GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
@@ -74,11 +81,11 @@ export class GameScene extends Phaser.Scene {
       .connect(
         this.token,
         this.roomId,
-        data => this.handleMessage(data),
-        err => this.handleClose(err),
+        (data) => this.handleMessage(data),
+        (err) => this.handleClose(err),
         TransportType.WebSocket
       )
-      .then(connection => {
+      .then((connection) => {
         this.connection = connection;
         console.log("connected");
       });
@@ -115,13 +122,13 @@ export class GameScene extends Phaser.Scene {
 
     if (this.chests.size === 0) {
       //first time through
-      state.chests.forEach(c => {
+      state.chests.forEach((c) => {
         this.addChest(c);
       });
       console.log(this.chests);
     }
 
-    state.players.forEach(player => {
+    state.players.forEach((player) => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
@@ -235,8 +242,8 @@ export class GameScene extends Phaser.Scene {
 
 function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
   return {
-    players: to.players.map(toPlayer => {
-      const fromPlayer = from.players.find(p => p.id === toPlayer.id);
+    players: to.players.map((toPlayer) => {
+      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
     chests: to.chests,
