@@ -1,5 +1,6 @@
 import { Direction } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
+
 import { isBeachTile } from "./utils.js";
 
 export default class NPC {
@@ -18,7 +19,7 @@ export default class NPC {
     this.direction = Direction.None;
   }
 
-  public static create(startingTile: {x: number, y: number}) {
+  public static create(startingTile: { x: number; y: number }) {
     return new NPC(startingTile.x, startingTile.y);
   }
 
@@ -29,9 +30,9 @@ export default class NPC {
       y: number;
     }
   ) {
-      if (this.direction === Direction.None || !isBeachTile(nextTile) || Math.random() < .01) {
-        this.direction = getRandomAdjacentDirection(this.direction);
-      }
+    if (this.direction === Direction.None || !isBeachTile(nextTile) || Math.random() < 0.01) {
+      this.direction = getRandomAdjacentDirection(this.direction);
+    }
   }
 }
 
@@ -47,7 +48,7 @@ function getRandomAdjacentDirection(direction: Direction): Direction {
       return getRandomElement([Direction.Left, Direction.Right]);
     case Direction.Left:
     case Direction.Right:
-      return getRandomElement([Direction.Up, Direction.Down])
+      return getRandomElement([Direction.Up, Direction.Down]);
     case Direction.None:
       return getRandomElement([Direction.Left, Direction.Right, Direction.Down, Direction.Up]);
     default:

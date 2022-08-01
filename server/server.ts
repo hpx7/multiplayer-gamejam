@@ -1,15 +1,10 @@
 import { register } from "@hathora/server-sdk";
 import dotenv from "dotenv";
-import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 
-import {
-  ClientMessage,
-  ClientMessageType,
-  Direction,
-  ServerMessage,
-  ServerMessageType,
-} from "../shared/messages.js";
+import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
+import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
+
 import NPC from "./npc.js";
 import { isBeachTile } from "./utils.js";
 
@@ -29,8 +24,7 @@ type ServerPlayer = {
 type ServerState = {
   players: ServerPlayer[];
 };
-const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> =
-  new Map();
+const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
 dotenv.config({ path: "../.env" });
 if (process.env.APP_SECRET === undefined) {
@@ -70,11 +64,7 @@ const coordinator = await register({
       console.log("unsubscribeAll");
     },
     onMessage(roomId, userId, data) {
-      const dataStr = Buffer.from(
-        data.buffer,
-        data.byteOffset,
-        data.byteLength
-      ).toString("utf8");
+      const dataStr = Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
       console.log("onMessage", roomId.toString(36), userId, dataStr);
       const { game } = states.get(roomId)!;
       const message: ClientMessage = JSON.parse(dataStr);
@@ -102,11 +92,7 @@ function broadcastUpdates(roomId: RoomId) {
       type: ServerMessageType.StateUpdate,
       state: gameState,
     };
-    coordinator.stateUpdate(
-      roomId,
-      userId,
-      Buffer.from(JSON.stringify(msg), "utf8")
-    );
+    coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
   });
 }
 
@@ -143,11 +129,7 @@ const pixelToTile = (x: number, y: number): { x: number; y: number } => {
   return { x: Math.floor(x / mapData.tilewidth), y: Math.floor(y / mapData.tileheight) };
 };
 
-function getNextTile(
-  x: number,
-  y: number,
-  direction: Direction
-): { x: number; y: number } {
+function getNextTile(x: number, y: number, direction: Direction): { x: number; y: number } {
   switch (direction) {
     case Direction.Up:
       return pixelToTile(x, y - PLAYER_SPEED);
@@ -159,7 +141,7 @@ function getNextTile(
       return pixelToTile(x + PLAYER_SPEED, y);
     case Direction.None:
       return { x, y };
-    default: 
+    default:
       return direction; //never,
   }
 }
@@ -176,6 +158,7 @@ function getRandomBeachPixel(): { x: number; y: number } {
 }
 
 function generateNPCs(numNPCs: number): ServerPlayer[] {
-  return Array(numNPCs).fill(undefined).map(_ => NPC.create(getRandomBeachPixel()))
+  return Array(numNPCs)
+    .fill(undefined)
+    .map(() => NPC.create(getRandomBeachPixel()));
 }
-
