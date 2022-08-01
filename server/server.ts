@@ -21,13 +21,11 @@ type ServerState = {
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
 dotenv.config({ path: "../.env" });
-// eslint-disable-next-line no-undef
 if (process.env.APP_SECRET === undefined) {
   throw new Error("APP_SECRET must be set");
 }
 
 const coordinator = await register({
-  // eslint-disable-next-line no-undef
   appSecret: process.env.APP_SECRET,
   authInfo: { anonymous: { separator: "-" } },
   store: {
@@ -56,7 +54,6 @@ const coordinator = await register({
       console.log("unsubscribeAll");
     },
     onMessage(roomId, userId, data) {
-      // eslint-disable-next-line no-undef
       const dataStr = Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
       console.log("onMessage", roomId.toString(36), userId, dataStr);
       const { game } = states.get(roomId)!;
@@ -85,7 +82,6 @@ function broadcastUpdates(roomId: RoomId) {
       type: ServerMessageType.StateUpdate,
       state: gameState,
     };
-    // eslint-disable-next-line no-undef
     coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
   });
 }
