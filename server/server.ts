@@ -101,7 +101,7 @@ setInterval(() => {
     game.players.forEach((player) => {
       const nextTile = getNextTile(player.x, player.y, player.direction);
       if (player.isNpc) {
-        (player as unknown as NPC).makeMoves(game, nextTile);
+        (player as NPC).makeMoves(game, nextTile);
       }
       if (player.direction === Direction.Up) {
         if (isBeachTile(nextTile)) {
@@ -141,8 +141,6 @@ function getNextTile(x: number, y: number, direction: Direction): { x: number; y
       return pixelToTile(x + PLAYER_SPEED, y);
     case Direction.None:
       return { x, y };
-    default:
-      return direction; //never,
   }
 }
 

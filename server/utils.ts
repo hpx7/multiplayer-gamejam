@@ -5,3 +5,7 @@ export const isBeachTile = (tile: { x: number; y: number }): boolean => {
   const arrayIndex = tile.y * mapData.width + tile.x;
   return mapData.layers[1].data[arrayIndex] != 0;
 };
+
+export function getRandomElement<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
