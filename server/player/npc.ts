@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Direction } from "../../shared/messages.js";
 import { assertNever, getNextTile, getRandomElement, isBeachTile, ServerState } from "../utils.js";
 

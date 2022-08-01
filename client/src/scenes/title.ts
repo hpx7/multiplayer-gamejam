@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { HathoraClient } from "@hathora/client-sdk";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";

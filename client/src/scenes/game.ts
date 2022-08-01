@@ -1,13 +1,23 @@
+/* eslint-disable prettier/prettier */
+
 import { HathoraClient } from "@hathora/client-sdk";
-import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
+import {
+  HathoraTransport,
+  TransportType,
+} from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
-import { checkServerIdentity } from "tls";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
-import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
-import { Chest, GameState, Player } from "../../../shared/state";
+import {
+  ClientMessage,
+  ClientMessageType,
+  Direction,
+  ServerMessage,
+  ServerMessageType,
+} from "../../../shared/messages";
+import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -22,7 +32,7 @@ export class GameScene extends Phaser.Scene {
   private buffer: InterpolationBuffer<GameState> | undefined;
 
   private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
-  private chests: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private chests: Map<string, {diffculty: Difficulty, reward: number, object: Phaser.GameObjects.Sprite} > = new Map();
 
   constructor() {
     super("game");
@@ -30,7 +40,15 @@ export class GameScene extends Phaser.Scene {
     this.decoder = new TextDecoder();
   }
 
-  init({ client, token, roomId }: { client: HathoraClient; token: string; roomId: string }) {
+  init({
+    client,
+    token,
+    roomId,
+  }: {
+    client: HathoraClient;
+    token: string;
+    roomId: string;
+  }) {
     this.client = client;
     this.token = token;
     this.roomId = roomId;
@@ -40,9 +58,15 @@ export class GameScene extends Phaser.Scene {
   preload() {
     this.load.tilemapTiledJSON("map", mapUrl);
     this.load.image("tiles", "tiles_sheet.png");
-    this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
+    this.load.spritesheet("player", "pirate-Sheet.png", {
+      frameWidth: 34,
+      frameHeight: 45,
+    });
     this.load.audio("game-music", "game_music.mp3");
-    this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet("chest", "chest_sheet.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
   }
 
   create() {
@@ -53,7 +77,14 @@ export class GameScene extends Phaser.Scene {
       fontSize: "20px",
       readOnly: true,
     };
-    const inputText = new InputText(this, this.scale.width - 125, 20, 300, 50, roomCodeConfig).setScrollFactor(0);
+    const inputText = new InputText(
+      this,
+      this.scale.width - 125,
+      20,
+      300,
+      50,
+      roomCodeConfig
+    ).setScrollFactor(0);
     this.add.existing(inputText);
 
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
@@ -74,11 +105,11 @@ export class GameScene extends Phaser.Scene {
       .connect(
         this.token,
         this.roomId,
-        data => this.handleMessage(data),
-        err => this.handleClose(err),
+        (data) => this.handleMessage(data),
+        (err) => this.handleClose(err),
         TransportType.WebSocket
       )
-      .then(connection => {
+      .then((connection) => {
         this.connection = connection;
         console.log("connected");
       });
@@ -98,7 +129,10 @@ export class GameScene extends Phaser.Scene {
         direction = Direction.None;
       }
 
-      const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
+      const msg: ClientMessage = {
+        type: ClientMessageType.SetDirection,
+        direction,
+      };
       console.log("sending msg", msg);
       this.connection.write(this.encoder.encode(JSON.stringify(msg)));
     };
@@ -115,13 +149,13 @@ export class GameScene extends Phaser.Scene {
 
     if (this.chests.size === 0) {
       //first time through
-      state.chests.forEach(c => {
+      state.chests.forEach((c) => {
         this.addChest(c);
       });
       console.log(this.chests);
     }
 
-    state.players.forEach(player => {
+    state.players.forEach((player) => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
@@ -149,10 +183,16 @@ export class GameScene extends Phaser.Scene {
     //convert x,y to pixel
     x *= 64;
     y *= 64;
-    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
+    const chestSprite = new Phaser.GameObjects.Sprite(
+      this,
+      x,
+      y,
+      "chest"
+    ).setOrigin(0, 0);
 
     this.add.existing(chestSprite);
-    this.chests.set(id, chestSprite);
+    
+    this.chests.set(id, {diffculty: difficulty, reward: reward, object: chestSprite});
     this.anims.create({
       key: "open",
       frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
@@ -162,7 +202,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private addPlayer({ id, x, y }: Player) {
-    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0, 0);
+    const sprite = new Phaser.GameObjects.Sprite(
+      this,
+      x,
+      y,
+      "player"
+    ).setOrigin(0, 0);
     this.add.existing(sprite);
     this.players.set(id, sprite);
     if (id === this.user.id) {
@@ -235,9 +280,11 @@ export class GameScene extends Phaser.Scene {
 
 function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
   return {
-    players: to.players.map(toPlayer => {
-      const fromPlayer = from.players.find(p => p.id === toPlayer.id);
-      return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
+    players: to.players.map((toPlayer) => {
+      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
+      return fromPlayer !== undefined
+        ? lerpPlayer(fromPlayer, toPlayer, pctElapsed)
+        : toPlayer;
     }),
     chests: to.chests,
   };
@@ -252,12 +299,3 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
   };
 }
 
-const pixelToTile = (x: number, y: number): { x: number; y: number } => {
-  return { x: Math.floor(x / 64), y: Math.floor(y / 64) };
-};
-
-const isBeachTile = (tile: { x: number; y: number }): boolean => {
-  // lookup which array index of tile is map data referring too
-  const arrayIndex = tile.y * 128 + tile.x;
-  return mapUrl.layers[1].data[arrayIndex] != 0;
-};

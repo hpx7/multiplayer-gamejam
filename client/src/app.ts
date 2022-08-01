@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import Phaser from "phaser";
 
 import { GameScene } from "./scenes/game";

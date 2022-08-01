@@ -1,9 +1,10 @@
+/* eslint-disable prettier/prettier */
 import { register } from "@hathora/server-sdk";
 import dotenv from "dotenv";
 
-import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
-import { Chest, Difficulty, GameState } from "../shared/state.js";
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
+import { ClientMessage, ClientMessageType,  ServerMessage, ServerMessageType } from "../shared/messages.js";
+import { Chest, Difficulty, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import NPC from "./player/npc.js";
@@ -14,18 +15,6 @@ type RoomId = bigint;
 type UserId = string;
 const numChests = 15;
 
-const PLAYER_SPEED = 10;
-type ServerPlayer = {
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-};
-
-/* type ServerState = {
-  players: ServerPlayer[];
-  chests: Chest[];
-}; */
 const NUM_NPCS = 100; //TODO: change lol
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
@@ -52,7 +41,6 @@ const coordinator = await register({
           };
         } while (!isBeachTile(newSpot));
         let newReward = 1 + Math.floor(Math.random() * 3);
-        let tempDiff = Math.floor(Math.random() * 3);
         let newDifficulty: Difficulty = Math.floor(Math.random() * 3);
         let newID = Math.random().toString(36).substring(2);
         tempChestArray.push({
@@ -75,7 +63,7 @@ const coordinator = await register({
       console.log("subscribeUser", roomId.toString(36), userId);
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
-      if (!game.players.some(player => player.id === userId)) {
+      if (!game.players.some((player) => player.id === userId)) {
         game.players.push(RealPlayer.create(userId, getRandomBeachPixel()));
       }
     },
@@ -92,7 +80,7 @@ const coordinator = await register({
       const { game } = states.get(roomId)!;
       const message: ClientMessage = JSON.parse(dataStr);
       if (message.type === ClientMessageType.SetDirection) {
-        const player = game.players.find(p => p.id === userId);
+        const player = game.players.find((p) => p.id === userId);
         if (player !== undefined) {
           player.direction = message.direction;
         }
@@ -103,9 +91,9 @@ const coordinator = await register({
 
 function broadcastUpdates(roomId: RoomId) {
   const { subscribers, game } = states.get(roomId)!;
-  subscribers.forEach(userId => {
+  subscribers.forEach((userId) => {
     const gameState: GameState = {
-      players: game.players.map(player => ({ id: player.id, x: player.x, y: player.y, dir: player.direction })),
+      players: game.players.map((player) => ({ id: player.id, x: player.x, y: player.y, dir: player.direction })),
       chests: game.chests,
     };
     const msg: ServerMessage = {
@@ -118,7 +106,7 @@ function broadcastUpdates(roomId: RoomId) {
 
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
-    game.players.forEach(player => {
+    game.players.forEach((player) => {
       if (player.isNpc) {
         (player as NPC).applyNpcAlgorithm(game);
       }

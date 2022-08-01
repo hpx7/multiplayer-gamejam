@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import AbstractServerPlayer from "./abstractServerPlayer.js";
 
 export default class RealPlayer extends AbstractServerPlayer {

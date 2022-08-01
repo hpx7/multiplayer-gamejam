@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { Direction } from "../shared/messages.js";
 import { Chest } from "../shared/state";
