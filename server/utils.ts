@@ -1,11 +1,9 @@
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { Direction } from "../shared/messages.js";
-import { Chest } from "../shared/state";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 export type ServerState = {
   players: AbstractServerPlayer[];
-  chests: Chest[];
 };
 
 export const PLAYER_SPEED = 10;
