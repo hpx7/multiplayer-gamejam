@@ -1,9 +1,9 @@
 import { register } from "@hathora/server-sdk";
 import dotenv from "dotenv";
 
+import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../shared/messages.js";
 import { GameState } from "../shared/state.js";
-import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 
 type RoomId = bigint;
 type UserId = string;
@@ -67,7 +67,11 @@ function broadcastUpdates(roomId: RoomId) {
   const { subscribers, game } = states.get(roomId)!;
   subscribers.forEach((userId) => {
     const gameState: GameState = {
-      players: game.players.map((player) => ({ id: player.id, x: player.x, y: player.y })),
+      players: game.players.map((player) => ({
+        id: player.id,
+        x: player.x,
+        y: player.y,
+      })),
     };
     const msg: ServerMessage = {
       type: ServerMessageType.StateUpdate,

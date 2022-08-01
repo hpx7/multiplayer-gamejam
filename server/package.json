@@ -2,7 +2,8 @@
   "name": "common",
   "type": "module",
   "scripts": {
-    "start": "npx ts-node-esm server.ts"
+    "start": "npx ts-node-esm server.ts",
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "@hathora/server-sdk": "^0.1.0",
@@ -10,6 +11,14 @@
   },
   "devDependencies": {
     "@types/node": "^18.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "eslint": "^8.20.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.4",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4"
   }
