@@ -38,12 +38,7 @@ const coordinator = await register({
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
-        game.players.push({
-          id: userId,
-          x: 650,
-          y: 550,
-          direction: Direction.None,
-        });
+        game.players.push({ id: userId, x: 650, y: 550, direction: Direction.None });
       }
     },
     unsubscribeUser(roomId, userId) {
