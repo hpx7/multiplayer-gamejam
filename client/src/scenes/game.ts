@@ -3,16 +3,11 @@ import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transpo
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
+import { checkServerIdentity } from "tls";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
-import {
-  ClientMessage,
-  ClientMessageType,
-  Direction,
-  ServerMessage,
-  ServerMessageType,
-} from "../../../shared/messages";
-import { GameState, Player } from "../../../shared/state";
+import { ClientMessage, ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
+import { Chest, GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -27,6 +22,7 @@ export class GameScene extends Phaser.Scene {
   private buffer: InterpolationBuffer<GameState> | undefined;
 
   private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private chests: Map<string, Phaser.GameObjects.Sprite> = new Map();
 
   constructor() {
     super("game");
@@ -46,6 +42,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image("tiles", "tiles_sheet.png");
     this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("game-music", "game_music.mp3");
+    this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
   }
 
   create() {
@@ -77,11 +74,11 @@ export class GameScene extends Phaser.Scene {
       .connect(
         this.token,
         this.roomId,
-        (data) => this.handleMessage(data),
-        (err) => this.handleClose(err),
+        data => this.handleMessage(data),
+        err => this.handleClose(err),
         TransportType.WebSocket
       )
-      .then((connection) => {
+      .then(connection => {
         this.connection = connection;
         console.log("connected");
       });
@@ -115,7 +112,16 @@ export class GameScene extends Phaser.Scene {
     }
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
-    state.players.forEach((player) => {
+
+    if (this.chests.size === 0) {
+      //first time through
+      state.chests.forEach(c => {
+        this.addChest(c);
+      });
+      console.log(this.chests);
+    }
+
+    state.players.forEach(player => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
@@ -137,6 +143,22 @@ export class GameScene extends Phaser.Scene {
 
   private handleClose(err: { code: number; reason: string }) {
     console.error("close", err);
+  }
+
+  private addChest({ id, x, y, reward, difficulty }: Chest) {
+    //convert x,y to pixel
+    x *= 64;
+    y *= 64;
+    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
+
+    this.add.existing(chestSprite);
+    this.chests.set(id, chestSprite);
+    this.anims.create({
+      key: "open",
+      frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
+      frameRate: 5,
+      repeat: 0,
+    });
   }
 
   private addPlayer({ id, x, y }: Player) {
@@ -213,10 +235,11 @@ export class GameScene extends Phaser.Scene {
 
 function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
   return {
-    players: to.players.map((toPlayer) => {
-      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
+    players: to.players.map(toPlayer => {
+      const fromPlayer = from.players.find(p => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
+    chests: to.chests,
   };
 }
 
@@ -228,3 +251,13 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     dir: to.dir,
   };
 }
+
+const pixelToTile = (x: number, y: number): { x: number; y: number } => {
+  return { x: Math.floor(x / 64), y: Math.floor(y / 64) };
+};
+
+const isBeachTile = (tile: { x: number; y: number }): boolean => {
+  // lookup which array index of tile is map data referring too
+  const arrayIndex = tile.y * 128 + tile.x;
+  return mapUrl.layers[1].data[arrayIndex] != 0;
+};
