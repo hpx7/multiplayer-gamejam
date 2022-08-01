@@ -30,7 +30,7 @@ const coordinator = await register({
     newState(roomId, userId, data) {
       //load up chests here
       let tempChestArray: Chest[] = [];
-      for (let index = 0; index < numChests; index++) {
+      for (let index = 0; index < NUM_CHESTS; index++) {
         //find random beach spot
         let newSpot;
         do {
