@@ -215,17 +215,17 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private updatePlayer({ id, x, y }: Player) {
+  private updatePlayer({ id, x, y, dir }: Player) {
     const sprite = this.players.get(id)!;
-    if (x < sprite.x) {
+    if (dir === Direction.Left) {
       sprite.anims.play("walkleft", true);
-    } else if (x > sprite.x) {
+    } else if (dir === Direction.Right) {
       sprite.anims.play("walkright", true);
-    } else if (y > sprite.y) {
+    } else if (dir === Direction.Down) {
       sprite.anims.play("walkdown", true);
-    } else if (y < sprite.y) {
+    } else if (dir === Direction.Up) {
       sprite.anims.play("walkup", true);
-    } else {
+    } else if (dir === Direction.None) {
       sprite.anims.play("idle");
     }
     sprite.x = x;
@@ -248,6 +248,7 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     id: from.id,
     x: from.x + (to.x - from.x) * pctElapsed,
     y: from.y + (to.y - from.y) * pctElapsed,
+    dir: to.dir,
   };
 }
 
