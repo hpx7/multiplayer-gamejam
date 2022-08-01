@@ -12,7 +12,7 @@ import {
   ServerMessage,
   ServerMessageType,
 } from "../../../shared/messages";
-import { GameState, Player } from "../../../shared/state";
+import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
@@ -27,6 +27,8 @@ export class GameScene extends Phaser.Scene {
   private buffer: InterpolationBuffer<GameState> | undefined;
 
   private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private chests: Map<string, { difficulty: Difficulty; reward: number; object: Phaser.GameObjects.Sprite }> =
+    new Map();
 
   constructor() {
     super("game");
@@ -46,6 +48,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image("tiles", "tiles_sheet.png");
     this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("game-music", "game_music.mp3");
+    this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
   }
 
   create() {
@@ -115,6 +118,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
+
+    if (this.chests.size === 0) {
+      //first time through
+      state.chests.forEach((c) => {
+        this.addChest(c);
+      });
+      console.log(this.chests);
+    }
+
     state.players.forEach((player) => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
@@ -137,6 +149,22 @@ export class GameScene extends Phaser.Scene {
 
   private handleClose(err: { code: number; reason: string }) {
     console.error("close", err);
+  }
+
+  private addChest({ id, x, y, reward, difficulty }: Chest) {
+    //convert x,y to pixel
+    x *= 64;
+    y *= 64;
+    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
+
+    this.add.existing(chestSprite);
+    this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
+    this.anims.create({
+      key: "open",
+      frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
+      frameRate: 5,
+      repeat: 0,
+    });
   }
 
   private addPlayer({ id, x, y }: Player) {
@@ -217,6 +245,7 @@ function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
       const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
+    chests: to.chests,
   };
 }
 
