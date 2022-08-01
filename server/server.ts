@@ -86,6 +86,7 @@ function broadcastUpdates(roomId: RoomId) {
         id: player.id,
         x: player.x,
         y: player.y,
+        dir: player.direction,
       })),
     };
     const msg: ServerMessage = {
