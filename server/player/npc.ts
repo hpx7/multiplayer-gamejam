@@ -1,9 +1,7 @@
-import { assertNever, getNextTile, getRandomElement, isBeachTile, ServerState } from "../utils.js";
-import AbstractServerPlayer from "./abstractServerPlayer.js";
 import { Direction } from "../../shared/messages.js";
+import { assertNever, getNextTile, getRandomElement, isBeachTile, ServerState } from "../utils.js";
 
-
-
+import AbstractServerPlayer from "./abstractServerPlayer.js";
 
 export default class NPC extends AbstractServerPlayer {
   isNpc: true = true;
