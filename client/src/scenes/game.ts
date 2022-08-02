@@ -170,7 +170,7 @@ export class GameScene extends Phaser.Scene {
 
   private addPlayer({ id, x, y, name }: Player) {
     const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
-    const nameText = new Phaser.GameObjects.Text(this, x, y, name, {
+    const nameText = new Phaser.GameObjects.Text(this, x, y - sprite.height, name, {
       // eslint-disable-next-line quotes
       fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
       fontSize: "24px",
