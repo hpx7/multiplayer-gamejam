@@ -1,29 +1,20 @@
 import { HathoraClient } from "@hathora/client-sdk";
-import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
-import {
-  ClientMessage,
-  ClientMessageType,
-  Direction,
-  ServerMessage,
-  ServerMessageType,
-} from "../../../shared/messages";
+import { ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
 import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
+import { RoomConnection } from "../connection";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
   private decoder: TextDecoder;
 
-  private client!: HathoraClient;
-  private token!: string;
-  private roomId!: string;
+  private connection!: RoomConnection;
   private user!: object & { id: string };
 
-  private connection!: HathoraTransport;
   private buffer: InterpolationBuffer<GameState> | undefined;
 
   private players: Map<string, { sprite: Phaser.GameObjects.Sprite; name: Phaser.GameObjects.Text }> = new Map();
@@ -36,11 +27,9 @@ export class GameScene extends Phaser.Scene {
     this.decoder = new TextDecoder();
   }
 
-  init({ client, token, roomId }: { client: HathoraClient; token: string; roomId: string }) {
-    this.client = client;
-    this.token = token;
-    this.roomId = roomId;
-    this.user = HathoraClient.getUserFromToken(token);
+  init({ connection }: { connection: RoomConnection }) {
+    this.connection = connection;
+    this.user = HathoraClient.getUserFromToken(connection.token);
   }
 
   preload() {
@@ -52,8 +41,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    this.connection.addListener((msg) => this.handleMessage(msg));
+
     const roomCodeConfig: InputText.IConfig = {
-      text: `Room Code: ${this.roomId}`,
+      text: `Room Code: ${this.connection.roomId}`,
       color: "white",
       fontFamily: "futura",
       fontSize: "20px",
@@ -77,19 +68,6 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, 8192, 4096);
     this.cameras.main.setZoom(0.5, 0.5);
 
-    this.client
-      .connect(
-        this.token,
-        this.roomId,
-        (data) => this.handleMessage(data),
-        (err) => this.handleClose(err),
-        TransportType.WebSocket
-      )
-      .then((connection) => {
-        this.connection = connection;
-        console.log("connected");
-      });
-
     const keys = this.input.keyboard.createCursorKeys();
     const handleKeyEvt = () => {
       let direction: Direction;
@@ -105,9 +83,9 @@ export class GameScene extends Phaser.Scene {
         direction = Direction.None;
       }
 
-      const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
+      const msg = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
-      this.connection.write(this.encoder.encode(JSON.stringify(msg)));
+      this.connection.sendMessage(msg);
     };
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
@@ -137,8 +115,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private handleMessage(data: ArrayBuffer) {
-    const msg: ServerMessage = JSON.parse(this.decoder.decode(data));
+  private handleMessage(msg: ServerMessage) {
     if (msg.type === ServerMessageType.StateUpdate) {
       if (this.buffer === undefined) {
         this.buffer = new InterpolationBuffer(msg.state, 50, lerp);
@@ -146,10 +123,6 @@ export class GameScene extends Phaser.Scene {
         this.buffer.enqueue(msg.state, [], Date.now());
       }
     }
-  }
-
-  private handleClose(err: { code: number; reason: string }) {
-    console.error("close", err);
   }
 
   private addChest({ id, x, y, reward, difficulty }: Chest) {
