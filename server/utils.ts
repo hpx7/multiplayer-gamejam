@@ -38,7 +38,7 @@ export function getNextTile(x: number, y: number, direction: Direction): { x: nu
 }
 
 export const pixelToTile = (x: number, y: number): { x: number; y: number } => {
-  return { x: Math.round(x / mapData.tilewidth), y: Math.round(y / mapData.tileheight) };
+  return { x: Math.floor(x / mapData.tilewidth), y: Math.floor(y / mapData.tileheight) };
 };
 
 export function assertNever(shouldBeNever: never): never {
