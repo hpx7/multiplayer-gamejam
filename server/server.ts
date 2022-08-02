@@ -58,7 +58,7 @@ const coordinator = await register({
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: generateNPCs(NUM_NPCS), chests: tempChestArray },
+        game: { players: [], chests: tempChestArray }, //generateNPCs(NUM_NPCS)
       });
     },
     subscribeUser(roomId, userId) {
@@ -90,13 +90,12 @@ const coordinator = await register({
         if (player !== undefined) {
           player.direction = message.direction;
         }
-      }
-
-      if (message.type === ClientMessageType.StartGame) {
+      } else if (message.type === ClientMessageType.StartGame) {
         //now add the NPC's
-        console.log("Adding NPCs");
+        console.log("Recieved Start Game messge, Adding NPCs");
         game.players = [...game.players, ...generateNPCs(NUM_NPCS)];
-        console.log(game.players);
+
+        startGame(roomId);
       }
     },
   },
@@ -118,6 +117,17 @@ function broadcastUpdates(roomId: RoomId) {
     const msg: ServerMessage = {
       type: ServerMessageType.StateUpdate,
       state: gameState,
+    };
+    coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
+  });
+}
+
+function startGame(roomId: RoomId) {
+  const { subscribers } = states.get(roomId)!;
+  console.log("sending starging game message to all subscribers, count: ", subscribers.size);
+  subscribers.forEach((userId) => {
+    const msg: ServerMessage = {
+      type: ServerMessageType.SrvStartGame,
     };
     coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
   });

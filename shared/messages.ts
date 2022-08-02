@@ -5,7 +5,7 @@ export enum ClientMessageType {
 }
 
 export enum ServerMessageType {
-  StateUpdate,
+  StateUpdate, SrvStartGame
 }
 
 export enum Direction {
@@ -27,9 +27,13 @@ export type StartGameMessage ={
   type: ClientMessageType.StartGame;
 }
 
-export type ServerMessage = StateUpdateMessage;
+export type ServerMessage = StateUpdateMessage|SrvStartGameMessage;
 
 export type StateUpdateMessage = {
   type: ServerMessageType.StateUpdate;
   state: GameState;
 };
+
+export type SrvStartGameMessage={
+  type: ServerMessageType.SrvStartGame;
+}

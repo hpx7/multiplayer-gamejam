@@ -1,24 +1,22 @@
 import { HathoraClient } from "@hathora/client-sdk";
-import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../../../shared/messages";
 import { GameState, Player } from "../../../shared/state";
+import { RoomConnection } from "../connection";
 
 export class LobbyScene extends Phaser.Scene {
-  private decoder: TextDecoder;
-  private encoder: TextEncoder;
-  private client!: HathoraClient;
-  private token!: string;
+  private connection!: RoomConnection;
   private roomId!: string;
-  private user!: object & { id: string };
   private buffer: InterpolationBuffer<GameState> | undefined;
-  private players: Map<string, number> = new Map();
+  private players: Map<string, { sprite: Phaser.GameObjects.Sprite; name: Phaser.GameObjects.Text }> = new Map();
   private lobbyText: any;
-  private connection!: HathoraTransport;
   private isAddingPlayers = true;
+  private encoder: TextEncoder;
+  private decoder: TextDecoder;
+  private user!: object & { id: string };
 
   constructor() {
     super("lobby");
@@ -26,11 +24,10 @@ export class LobbyScene extends Phaser.Scene {
     this.decoder = new TextDecoder();
   }
 
-  init({ client, token, roomId }: { client: HathoraClient; token: string; roomId: string }) {
-    this.client = client;
-    this.token = token;
-    this.roomId = roomId;
-    this.user = HathoraClient.getUserFromToken(token);
+  init({ connection }: { connection: RoomConnection }) {
+    this.connection = connection;
+    this.roomId = connection.roomId;
+    this.user = HathoraClient.getUserFromToken(connection.token);
   }
 
   preload() {
@@ -39,18 +36,7 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   create() {
-    this.client
-      .connect(
-        this.token,
-        this.roomId,
-        (data) => this.handleMessage(data), //this.handleMessage(data)
-        (err) => this.handleClose(err),
-        TransportType.WebSocket
-      )
-      .then((connection) => {
-        this.connection = connection;
-        console.log("connected");
-      });
+    this.connection.addListener((msg) => this.handleMessage(msg));
 
     /**
      * Setting up Lobby UI
@@ -72,17 +58,11 @@ export class LobbyScene extends Phaser.Scene {
       .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
       .on("pointerdown", async () => {
         this.isAddingPlayers = false;
+
         const msg: ClientMessage = { type: ClientMessageType.StartGame };
-        console.log("sending msg", msg);
-        this.connection.write(this.encoder.encode(JSON.stringify(msg)));
-        const roomId = await this.client.create(this.token, new Uint8Array());
-        this.scene.start("game", {
-          client: this.client,
-          token: this.token,
-          roomId: roomId,
-          connection: this.connection,
-          decoder: this.decoder,
-        });
+        console.log("sending starting game message", msg);
+        this.connection.sendMessage(msg);
+        this.scene.start("game", { connection: this.connection });
       });
 
     //title
@@ -190,12 +170,13 @@ export class LobbyScene extends Phaser.Scene {
     if (this.buffer === undefined) {
       return;
     }
-
+    console.log("update running");
     if (this.isAddingPlayers) {
       let lobbyString = "";
       const { state } = this.buffer.getInterpolatedState(Date.now());
       state.players.forEach((player, index) => {
         if (!this.players.has(player.id)) {
+          console.log(`adding player: ${index}, ${player.id}`);
           this.players.set(player.id, index);
         }
         lobbyString = lobbyString + `(Player: ${index}, ID: ${player.id})  `;
@@ -204,14 +185,18 @@ export class LobbyScene extends Phaser.Scene {
     }
   }
 
-  private handleMessage(data: ArrayBuffer) {
-    const msg: ServerMessage = JSON.parse(this.decoder.decode(data));
+  private handleMessage(msg: ServerMessage) {
     if (msg.type === ServerMessageType.StateUpdate) {
       if (this.buffer === undefined) {
+        console.log("setting up buffer");
         this.buffer = new InterpolationBuffer(msg.state, 50, lerp);
       } else {
         this.buffer.enqueue(msg.state, [], Date.now());
       }
+    } else if (msg.type === ServerMessageType.SrvStartGame) {
+      console.log("received start message from server");
+      this.isAddingPlayers = false;
+      this.scene.start("game", { connection: this.connection });
     }
   }
 
@@ -226,11 +211,13 @@ function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
       const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
+    chests: to.chests,
   };
 }
 
 function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
   return {
+    name: to.name,
     id: from.id,
     x: from.x + (to.x - from.x) * pctElapsed,
     y: from.y + (to.y - from.y) * pctElapsed,

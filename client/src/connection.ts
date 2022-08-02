@@ -25,6 +25,10 @@ export class RoomConnection {
     );
   }
 
+  public async disconnect() {
+    this.connection?.disconnect();
+  }
+
   public addListener(listener: UpdateListener) {
     this.listeners.push(listener);
   }
