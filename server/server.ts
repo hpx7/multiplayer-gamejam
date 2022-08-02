@@ -13,7 +13,7 @@ import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
 type RoomId = bigint;
 type UserId = string;
 
-const NUM_NPCS = 100; //TODO: change lol
+const NUM_NPCS = 20; //TODO: change lol
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -30,7 +30,7 @@ const coordinator = await register({
       console.log("newState", roomId.toString(36), userId, data);
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: generateNPCs(NUM_NPCS) },
+        game: { players: [] },
       });
     },
     subscribeUser(roomId, userId) {
@@ -44,6 +44,10 @@ const coordinator = await register({
     unsubscribeUser(roomId, userId) {
       console.log("unsubscribeUser", roomId.toString(36), userId);
       states.get(roomId)!.subscribers.delete(userId);
+      let findIndex = states.get(roomId)!.game.players.findIndex((p) => {
+        p.id === userId;
+      });
+      states.get(roomId)!.game.players.splice(findIndex, 1);
     },
     unsubscribeAll() {
       console.log("unsubscribeAll");
@@ -58,6 +62,13 @@ const coordinator = await register({
         if (player !== undefined) {
           player.direction = message.direction;
         }
+      }
+
+      if (message.type === ClientMessageType.StartGame) {
+        //now add the NPC's
+        console.log("Adding NPCs");
+        game.players = [...game.players, ...generateNPCs(NUM_NPCS)];
+        console.log(game.players);
       }
     },
   },

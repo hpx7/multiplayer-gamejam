@@ -1,5 +1,5 @@
 import { HathoraClient } from "@hathora/client-sdk";
-import { HathoraTransport, TransportType } from "@hathora/client-sdk/lib/transport";
+import { HathoraTransport } from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
@@ -72,19 +72,6 @@ export class GameScene extends Phaser.Scene {
     map.createLayer("Beach", tileset);
 
     this.cameras.main.setBounds(0, 0, 8192, 4096);
-
-    this.client
-      .connect(
-        this.token,
-        this.roomId,
-        (data) => this.handleMessage(data),
-        (err) => this.handleClose(err),
-        TransportType.WebSocket
-      )
-      .then((connection) => {
-        this.connection = connection;
-        console.log("connected");
-      });
 
     const keys = this.input.keyboard.createCursorKeys();
     const handleKeyEvt = () => {
