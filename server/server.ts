@@ -15,7 +15,7 @@ type RoomId = bigint;
 type UserId = string;
 
 const NUM_CHESTS = 15;
-const NUM_NPCS = 100; //TODO: change lol
+const NUM_NPCS = 20;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
