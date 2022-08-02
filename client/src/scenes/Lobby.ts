@@ -1,33 +1,20 @@
-import { HathoraClient } from "@hathora/client-sdk";
-import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../../../shared/messages";
-import { GameState, Player } from "../../../shared/state";
 import { RoomConnection } from "../connection";
 
 export class LobbyScene extends Phaser.Scene {
   private connection!: RoomConnection;
-  private roomId!: string;
-  private buffer: InterpolationBuffer<GameState> | undefined;
-  private players: Map<string, { sprite: Phaser.GameObjects.Sprite; name: Phaser.GameObjects.Text }> = new Map();
   private lobbyText: any;
   private isAddingPlayers = true;
-  private encoder: TextEncoder;
-  private decoder: TextDecoder;
-  private user!: object & { id: string };
 
   constructor() {
     super("lobby");
-    this.encoder = new TextEncoder();
-    this.decoder = new TextDecoder();
   }
 
   init({ connection }: { connection: RoomConnection }) {
     this.connection = connection;
-    this.roomId = connection.roomId;
-    this.user = HathoraClient.getUserFromToken(connection.token);
   }
 
   preload() {
@@ -67,7 +54,7 @@ export class LobbyScene extends Phaser.Scene {
 
     //title
     const titleConfig: InputText.IConfig = {
-      text: `LOBBY -  ROOM: ${this.roomId}`,
+      text: `LOBBY -  ROOM: ${this.connection.roomId}`,
       color: "black",
       fontFamily: "futura",
       fontSize: "32px",
@@ -166,32 +153,14 @@ export class LobbyScene extends Phaser.Scene {
     });
   }
 
-  update(): void {
-    if (this.buffer === undefined) {
-      return;
-    }
-    console.log("update running");
-    if (this.isAddingPlayers) {
-      let lobbyString = "";
-      const { state } = this.buffer.getInterpolatedState(Date.now());
-      state.players.forEach((player, index) => {
-        if (!this.players.has(player.id)) {
-          console.log(`adding player: ${index}, ${player.id}`);
-          this.players.set(player.id, index);
-        }
-        lobbyString = lobbyString + `(Player: ${index}, ID: ${player.id})  `;
-      });
-      this.lobbyText.text = lobbyString;
-    }
-  }
-
   private handleMessage(msg: ServerMessage) {
     if (msg.type === ServerMessageType.StateUpdate) {
-      if (this.buffer === undefined) {
-        console.log("setting up buffer");
-        this.buffer = new InterpolationBuffer(msg.state, 50, lerp);
-      } else {
-        this.buffer.enqueue(msg.state, [], Date.now());
+      if (this.isAddingPlayers) {
+        let lobbyString = "";
+        msg.state.players.forEach((player, index) => {
+          lobbyString = lobbyString + `(Player: ${index}, ID: ${player.id})  `;
+        });
+        this.lobbyText.text = lobbyString;
       }
     } else if (msg.type === ServerMessageType.SrvStartGame) {
       console.log("received start message from server");
@@ -199,28 +168,4 @@ export class LobbyScene extends Phaser.Scene {
       this.scene.start("game", { connection: this.connection });
     }
   }
-
-  private handleClose(err: { code: number; reason: string }) {
-    console.error("close", err);
-  }
-}
-
-function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
-  return {
-    players: to.players.map((toPlayer) => {
-      const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
-      return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
-    }),
-    chests: to.chests,
-  };
-}
-
-function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
-  return {
-    name: to.name,
-    id: from.id,
-    x: from.x + (to.x - from.x) * pctElapsed,
-    y: from.y + (to.y - from.y) * pctElapsed,
-    dir: to.dir,
-  };
 }

@@ -9,9 +9,6 @@ import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
 import { RoomConnection } from "../connection";
 
 export class GameScene extends Phaser.Scene {
-  private encoder: TextEncoder;
-  private decoder: TextDecoder;
-
   private connection!: RoomConnection;
   private user!: object & { id: string };
 
@@ -23,8 +20,6 @@ export class GameScene extends Phaser.Scene {
 
   constructor() {
     super("game");
-    this.encoder = new TextEncoder();
-    this.decoder = new TextDecoder();
   }
 
   init({ connection }: { connection: RoomConnection }) {
