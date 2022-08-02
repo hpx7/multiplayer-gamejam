@@ -93,7 +93,13 @@ function broadcastUpdates(roomId: RoomId) {
   const { subscribers, game } = states.get(roomId)!;
   subscribers.forEach((userId) => {
     const gameState: GameState = {
-      players: game.players.map((player) => ({ id: player.id, x: player.x, y: player.y, dir: player.direction })),
+      players: game.players.map((player) => ({
+        id: player.id,
+        x: player.x,
+        y: player.y,
+        dir: player.direction,
+        name: player.name,
+      })),
       chests: game.chests,
     };
     const msg: ServerMessage = {
