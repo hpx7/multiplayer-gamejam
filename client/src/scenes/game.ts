@@ -1,32 +1,25 @@
 import { HathoraClient } from "@hathora/client-sdk";
-import { HathoraTransport } from "@hathora/client-sdk/lib/transport";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
-import {
-  ClientMessage,
-  ClientMessageType,
-  Direction,
-  ServerMessage,
-  ServerMessageType,
-} from "../../../shared/messages";
-import { GameState, Player } from "../../../shared/state";
+import { ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
+import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
+import { RoomConnection } from "../connection";
 
 export class GameScene extends Phaser.Scene {
   private encoder: TextEncoder;
   private decoder: TextDecoder;
 
-  private client!: HathoraClient;
-  private token!: string;
-  private roomId!: string;
+  private connection!: RoomConnection;
   private user!: object & { id: string };
 
-  private connection!: HathoraTransport;
   private buffer: InterpolationBuffer<GameState> | undefined;
 
-  private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private players: Map<string, { sprite: Phaser.GameObjects.Sprite; name: Phaser.GameObjects.Text }> = new Map();
+  private chests: Map<string, { difficulty: Difficulty; reward: number; object: Phaser.GameObjects.Sprite }> =
+    new Map();
 
   constructor() {
     super("game");
@@ -34,11 +27,9 @@ export class GameScene extends Phaser.Scene {
     this.decoder = new TextDecoder();
   }
 
-  init({ client, token, roomId }: { client: HathoraClient; token: string; roomId: string }) {
-    this.client = client;
-    this.token = token;
-    this.roomId = roomId;
-    this.user = HathoraClient.getUserFromToken(token);
+  init({ connection }: { connection: RoomConnection }) {
+    this.connection = connection;
+    this.user = HathoraClient.getUserFromToken(connection.token);
   }
 
   preload() {
@@ -46,17 +37,20 @@ export class GameScene extends Phaser.Scene {
     this.load.image("tiles", "tiles_sheet.png");
     this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("game-music", "game_music.mp3");
+    this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
   }
 
   create() {
+    this.connection.addListener((msg) => this.handleMessage(msg));
+
     const roomCodeConfig: InputText.IConfig = {
-      text: `Room Code: ${this.roomId}`,
+      text: `Room Code: ${this.connection.roomId}`,
       color: "white",
       fontFamily: "futura",
       fontSize: "20px",
       readOnly: true,
     };
-    const inputText = new InputText(this, this.scale.width - 125, 20, 300, 50, roomCodeConfig).setScrollFactor(0);
+    const inputText = new InputText(this, this.scale.width + 125, -300, 300, 50, roomCodeConfig).setScrollFactor(0);
     this.add.existing(inputText);
 
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
@@ -72,6 +66,7 @@ export class GameScene extends Phaser.Scene {
     map.createLayer("Beach", tileset);
 
     this.cameras.main.setBounds(0, 0, 8192, 4096);
+    this.cameras.main.setZoom(0.5, 0.5);
 
     const keys = this.input.keyboard.createCursorKeys();
     const handleKeyEvt = () => {
@@ -88,9 +83,9 @@ export class GameScene extends Phaser.Scene {
         direction = Direction.None;
       }
 
-      const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
+      const msg = { type: ClientMessageType.SetDirection, direction };
       console.log("sending msg", msg);
-      this.connection.write(this.encoder.encode(JSON.stringify(msg)));
+      this.connection.sendMessage(msg);
     };
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
@@ -102,6 +97,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
+
+    if (this.chests.size === 0) {
+      //first time through
+      state.chests.forEach((c) => {
+        this.addChest(c);
+      });
+      console.log(this.chests);
+    }
+
     state.players.forEach((player) => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
@@ -111,8 +115,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private handleMessage(data: ArrayBuffer) {
-    const msg: ServerMessage = JSON.parse(this.decoder.decode(data));
+  private handleMessage(msg: ServerMessage) {
     if (msg.type === ServerMessageType.StateUpdate) {
       if (this.buffer === undefined) {
         this.buffer = new InterpolationBuffer(msg.state, 50, lerp);
@@ -122,14 +125,34 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private handleClose(err: { code: number; reason: string }) {
-    console.error("close", err);
+  private addChest({ id, x, y, reward, difficulty }: Chest) {
+    //convert x,y to pixel
+    x *= 64;
+    y *= 64;
+    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
+
+    this.add.existing(chestSprite);
+    this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
+    this.anims.create({
+      key: "open",
+      frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
+      frameRate: 5,
+      repeat: 0,
+    });
   }
 
-  private addPlayer({ id, x, y }: Player) {
-    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0, 0);
+  private addPlayer({ id, x, y, name }: Player) {
+    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
+    const nameText = new Phaser.GameObjects.Text(this, x, y - sprite.height, name, {
+      // eslint-disable-next-line quotes
+      fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
+      fontSize: "24px",
+      color: "black",
+      fixedHeight: 28,
+    }).setOrigin(0.5, 1);
     this.add.existing(sprite);
-    this.players.set(id, sprite);
+    this.add.existing(nameText);
+    this.players.set(id, { sprite, name: nameText });
     if (id === this.user.id) {
       this.cameras.main.startFollow(sprite, true);
     }
@@ -181,7 +204,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updatePlayer({ id, x, y, dir }: Player) {
-    const sprite = this.players.get(id)!;
+    const { sprite, name } = this.players.get(id)!;
     if (dir === Direction.Left) {
       sprite.anims.play("walkleft", true);
     } else if (dir === Direction.Right) {
@@ -195,6 +218,8 @@ export class GameScene extends Phaser.Scene {
     }
     sprite.x = x;
     sprite.y = y;
+    name.x = x;
+    name.y = y - sprite.height;
   }
 }
 
@@ -204,6 +229,7 @@ function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
       const fromPlayer = from.players.find((p) => p.id === toPlayer.id);
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
+    chests: to.chests,
   };
 }
 
@@ -213,5 +239,6 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     x: from.x + (to.x - from.x) * pctElapsed,
     y: from.y + (to.y - from.y) * pctElapsed,
     dir: to.dir,
+    name: from.name,
   };
 }

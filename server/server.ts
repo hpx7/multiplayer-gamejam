@@ -3,9 +3,10 @@ import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
-import { GameState } from "../shared/state.js";
+import { Chest, Difficulty, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
+import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC from "./player/npc.js";
 import RealPlayer from "./player/realPlayer.js";
 import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
@@ -13,7 +14,8 @@ import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
 type RoomId = bigint;
 type UserId = string;
 
-const NUM_NPCS = 20; //TODO: change lol
+const NUM_CHESTS = 15;
+const NUM_NPCS = 20;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -27,10 +29,36 @@ const coordinator = await register({
   authInfo: { anonymous: { separator: "-" } },
   store: {
     newState(roomId, userId, data) {
+      //load up chests here
+      let tempChestArray: Chest[] = [];
+      for (let index = 0; index < NUM_CHESTS; index++) {
+        //find random beach spot
+        let newSpot;
+        do {
+          newSpot = {
+            x: Math.floor(Math.random() * 128),
+            y: Math.floor(Math.random() * 64),
+          };
+        } while (!isBeachTile(newSpot));
+        let newReward = 1 + Math.floor(Math.random() * 3);
+
+        let newDifficulty: Difficulty = Math.floor(Math.random() * 3);
+        let newID = Math.random().toString(36).substring(2);
+        tempChestArray.push({
+          id: newID,
+          x: newSpot.x,
+          y: newSpot.y,
+          reward: newReward,
+          difficulty: newDifficulty,
+        });
+        //load up chest
+      }
+      console.log(tempChestArray);
       console.log("newState", roomId.toString(36), userId, data);
+      USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: [] },
+        game: { players: generateNPCs(NUM_NPCS), chests: tempChestArray },
       });
     },
     subscribeUser(roomId, userId) {
@@ -83,7 +111,9 @@ function broadcastUpdates(roomId: RoomId) {
         x: player.x,
         y: player.y,
         dir: player.direction,
+        name: player.name,
       })),
+      chests: game.chests,
     };
     const msg: ServerMessage = {
       type: ServerMessageType.StateUpdate,

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  client:
+    name: CI for client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          eslint_dir: client/src
+          eslint_extensions: js,jsx,ts,tsx
+          auto_fix: true
+
+  server:
+    name: CI for server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          eslint_dir: server
+          eslint_extensions: js,jsx,ts,tsx
+          auto_fix: true

@@ -2,6 +2,8 @@ import { HathoraClient } from "@hathora/client-sdk";
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
+import { RoomConnection } from "../connection";
+
 export class TitleScene extends Phaser.Scene {
   constructor() {
     super("title");
@@ -21,14 +23,14 @@ export class TitleScene extends Phaser.Scene {
       music.stop();
     });
 
-    getToken(client).then((token) => {
+    getToken(client).then(async (token) => {
       const url = window.location === window.parent.location ? document.location.href : document.referrer;
       if (url.includes("?")) {
         const queryString = url.split("?")[1];
         const queryParams = new URLSearchParams(queryString);
         const roomId = queryParams.get("roomId");
         if (roomId !== null) {
-          this.scene.start("game", { client, token, roomId });
+          this.scene.start("game", { connection: await getConnection(client, token, roomId) });
           return;
         }
       }
@@ -48,7 +50,7 @@ export class TitleScene extends Phaser.Scene {
         .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
         .on("pointerdown", async () => {
           const roomId = await client.create(token, new Uint8Array());
-          this.scene.start("lobby", { client, token, roomId });
+          this.scene.start("game", { connection: await getConnection(client, token, roomId) });
         });
 
       const joinButton = this.add
@@ -69,7 +71,7 @@ export class TitleScene extends Phaser.Scene {
             alert("Please enter an existing room code or create a new game!");
             return;
           }
-          this.scene.start("lobby", { client, token, roomId });
+          this.scene.start("game", { connection: await getConnection(client, token, roomId) });
         });
 
       const inputTextConfig: InputText.IConfig = {
@@ -95,4 +97,10 @@ async function getToken(client: HathoraClient): Promise<string> {
     return newToken;
   }
   return token;
+}
+
+async function getConnection(client: HathoraClient, token: string, roomId: string): Promise<RoomConnection> {
+  const connection = new RoomConnection(client, token, roomId);
+  await connection.connect();
+  return connection;
 }

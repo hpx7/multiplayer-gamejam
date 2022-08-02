@@ -1,8 +1,11 @@
 import { Direction } from "../../shared/messages.js";
 import { assertNever, getNextTile, isBeachTile, PLAYER_SPEED } from "../utils.js";
 
+import { generatePirateName } from "./nameGenerator.js";
+
 export default abstract class AbstractServerPlayer {
   id: string;
+  name: string;
   x: number;
   y: number;
   direction: Direction;
@@ -13,6 +16,7 @@ export default abstract class AbstractServerPlayer {
     this.x = x;
     this.y = y;
     this.direction = Direction.None;
+    this.name = generatePirateName();
   }
 
   public update() {

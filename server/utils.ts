@@ -1,12 +1,14 @@
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { Direction } from "../shared/messages.js";
+import { Chest } from "../shared/state";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 export type ServerState = {
   players: AbstractServerPlayer[];
+  chests: Chest[];
 };
 
-export const PLAYER_SPEED = 10;
+export const PLAYER_SPEED = 15;
 
 export const isBeachTile = (tile: { x: number; y: number }): boolean => {
   // lookup which array index of tile is map data referring too
@@ -36,7 +38,7 @@ export function getNextTile(x: number, y: number, direction: Direction): { x: nu
 }
 
 export const pixelToTile = (x: number, y: number): { x: number; y: number } => {
-  return { x: Math.round(x / mapData.tilewidth), y: Math.round(y / mapData.tileheight) };
+  return { x: Math.floor(x / mapData.tilewidth), y: Math.floor(y / mapData.tileheight) };
 };
 
 export function assertNever(shouldBeNever: never): never {
