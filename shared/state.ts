@@ -5,6 +5,7 @@ export type Player = {
   x: number;
   y: number;
   dir: Direction;
+  name: string;
 };
 
 export enum Difficulty {

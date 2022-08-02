@@ -26,7 +26,7 @@ export class GameScene extends Phaser.Scene {
   private connection!: HathoraTransport;
   private buffer: InterpolationBuffer<GameState> | undefined;
 
-  private players: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private players: Map<string, { sprite: Phaser.GameObjects.Sprite; name: Phaser.GameObjects.Text }> = new Map();
   private chests: Map<string, { difficulty: Difficulty; reward: number; object: Phaser.GameObjects.Sprite }> =
     new Map();
 
@@ -168,10 +168,18 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private addPlayer({ id, x, y }: Player) {
+  private addPlayer({ id, x, y, name }: Player) {
     const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
+    const nameText = new Phaser.GameObjects.Text(this, x, y - sprite.height, name, {
+      // eslint-disable-next-line quotes
+      fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
+      fontSize: "24px",
+      color: "black",
+      fixedHeight: 28,
+    }).setOrigin(0.5, 1);
     this.add.existing(sprite);
-    this.players.set(id, sprite);
+    this.add.existing(nameText);
+    this.players.set(id, { sprite, name: nameText });
     if (id === this.user.id) {
       this.cameras.main.startFollow(sprite, true);
     }
@@ -223,7 +231,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updatePlayer({ id, x, y, dir }: Player) {
-    const sprite = this.players.get(id)!;
+    const { sprite, name } = this.players.get(id)!;
     if (dir === Direction.Left) {
       sprite.anims.play("walkleft", true);
     } else if (dir === Direction.Right) {
@@ -237,6 +245,8 @@ export class GameScene extends Phaser.Scene {
     }
     sprite.x = x;
     sprite.y = y;
+    name.x = x;
+    name.y = y - sprite.height;
   }
 }
 
@@ -256,5 +266,6 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     x: from.x + (to.x - from.x) * pctElapsed,
     y: from.y + (to.y - from.y) * pctElapsed,
     dir: to.dir,
+    name: from.name,
   };
 }
