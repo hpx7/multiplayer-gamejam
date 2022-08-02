@@ -75,6 +75,7 @@ export class GameScene extends Phaser.Scene {
     map.createLayer("Beach", tileset);
 
     this.cameras.main.setBounds(0, 0, 8192, 4096);
+    this.cameras.main.setZoom(0.5, 0.5);
 
     this.client
       .connect(
