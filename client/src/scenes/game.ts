@@ -59,7 +59,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: "20px",
       readOnly: true,
     };
-    const inputText = new InputText(this, this.scale.width - 125, 20, 300, 50, roomCodeConfig).setScrollFactor(0);
+    const inputText = new InputText(this, this.scale.width + 125, -300, 300, 50, roomCodeConfig).setScrollFactor(0);
     this.add.existing(inputText);
 
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
