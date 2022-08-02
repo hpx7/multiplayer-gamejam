@@ -168,7 +168,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private addPlayer({ id, x, y }: Player) {
-    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0, 0);
+    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
     this.add.existing(sprite);
     this.players.set(id, sprite);
     if (id === this.user.id) {
