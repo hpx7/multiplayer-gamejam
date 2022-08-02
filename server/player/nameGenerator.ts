@@ -1,6 +1,6 @@
 import { getRandomElement } from "../utils.js";
 
-const USED_NAMES = new Set<string>();
+export const USED_NAMES = new Set<string>(); //exported to be cleared when new state generated
 export function generatePirateName(): string {
   let randomString;
   while (randomString == null || USED_NAMES.has(randomString)) {

@@ -6,6 +6,7 @@ import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } fr
 import { Chest, Difficulty, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
+import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC from "./player/npc.js";
 import RealPlayer from "./player/realPlayer.js";
 import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
@@ -54,6 +55,7 @@ const coordinator = await register({
       }
       console.log(tempChestArray);
       console.log("newState", roomId.toString(36), userId, data);
+      USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
         game: { players: generateNPCs(NUM_NPCS), chests: tempChestArray },
