@@ -34,6 +34,7 @@ export type ServerMessage = StateUpdateMessage | SrvStartGameMessage;
 export type StateUpdateMessage = {
   type: ServerMessageType.StateUpdate;
   state: GameState;
+  ts: number;
 };
 
 export type SrvStartGameMessage = {

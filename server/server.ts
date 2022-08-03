@@ -105,20 +105,22 @@ const coordinator = await register({
 
 function broadcastUpdates(roomId: RoomId) {
   const { subscribers, game } = states.get(roomId)!;
+  const now = Date.now();
+  const gameState: GameState = {
+    players: game.players.map((player) => ({
+      id: player.id,
+      x: player.x,
+      y: player.y,
+      dir: player.direction,
+      name: player.name,
+    })),
+    chests: game.chests,
+  };
   subscribers.forEach((userId) => {
-    const gameState: GameState = {
-      players: game.players.map((player) => ({
-        id: player.id,
-        x: player.x,
-        y: player.y,
-        dir: player.direction,
-        name: player.name,
-      })),
-      chests: game.chests,
-    };
     const msg: ServerMessage = {
       type: ServerMessageType.StateUpdate,
       state: gameState,
+      ts: now,
     };
     coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
   });
