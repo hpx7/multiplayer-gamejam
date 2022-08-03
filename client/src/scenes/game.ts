@@ -1,7 +1,6 @@
 import { HathoraClient } from "@hathora/client-sdk";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
-import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
 import { ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
