@@ -1,7 +1,6 @@
 import { HathoraClient } from "@hathora/client-sdk";
 import { InterpolationBuffer } from "interpolation-buffer";
 import Phaser from "phaser";
-import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
 import { ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
@@ -157,7 +156,7 @@ export class GameScene extends Phaser.Scene {
       if (this.buffer === undefined) {
         this.buffer = new InterpolationBuffer(msg.state, 50, lerp);
       } else {
-        this.buffer.enqueue(msg.state, [], Date.now());
+        this.buffer.enqueue(msg.state, [], msg.ts);
       }
     }
   }
