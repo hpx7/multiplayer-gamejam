@@ -223,7 +223,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private addPlayer({ id, x, y, name, role }: Player) {
-    console.log(role);
     let sprite;
     if (role === "blackbeard") {
       sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard").setOrigin(0.5, 1);
@@ -238,7 +237,6 @@ export class GameScene extends Phaser.Scene {
       color: "black",
       fixedHeight: 28,
     }).setOrigin(0.5, 1);
-    console.log(sprite);
     this.add.existing(sprite);
     this.add.existing(nameText);
     this.players.set(id, { sprite, name: nameText });
