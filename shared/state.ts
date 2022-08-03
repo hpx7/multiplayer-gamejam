@@ -6,6 +6,7 @@ export type Player = {
   y: number;
   dir: Direction;
   name: string;
+  role: "pirate" | "blackbeard"
 };
 
 export enum Difficulty {
