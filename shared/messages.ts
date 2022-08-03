@@ -1,11 +1,13 @@
 import { GameState } from "./state";
 
 export enum ClientMessageType {
-  SetDirection, StartGame
+  SetDirection,
+  StartGame,
 }
 
 export enum ServerMessageType {
-  StateUpdate, SrvStartGame
+  StateUpdate,
+  SrvStartGame,
 }
 
 export enum Direction {
@@ -23,17 +25,17 @@ export type SetDirectionMessage = {
   direction: Direction;
 };
 
-export type StartGameMessage ={
+export type StartGameMessage = {
   type: ClientMessageType.StartGame;
-}
+};
 
-export type ServerMessage = StateUpdateMessage|SrvStartGameMessage;
+export type ServerMessage = StateUpdateMessage | SrvStartGameMessage;
 
 export type StateUpdateMessage = {
   type: ServerMessageType.StateUpdate;
   state: GameState;
 };
 
-export type SrvStartGameMessage={
+export type SrvStartGameMessage = {
   type: ServerMessageType.SrvStartGame;
-}
+};
