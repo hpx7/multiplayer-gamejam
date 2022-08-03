@@ -33,6 +33,11 @@ export class RoomConnection {
     this.connection?.write(this.encoder.encode(JSON.stringify(msg)));
   }
 
+  public disconnect() {
+    this.connection?.disconnect();
+    this.listeners = [];
+  }
+
   private handleMessage(data: ArrayBuffer) {
     const msg: ServerMessage = JSON.parse(this.decoder.decode(data));
     this.listeners.forEach((listener) => listener(msg));

@@ -15,7 +15,7 @@ type RoomId = bigint;
 type UserId = string;
 
 const NUM_CHESTS = 15;
-const NUM_NPCS = 20;
+const NUM_PLAYERS = 10;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -53,12 +53,11 @@ const coordinator = await register({
         });
         //load up chest
       }
-      console.log(tempChestArray);
       console.log("newState", roomId.toString(36), userId, data);
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: generateNPCs(NUM_NPCS), chests: tempChestArray },
+        game: { players: [], chests: tempChestArray },
       });
     },
     subscribeUser(roomId, userId) {
@@ -72,6 +71,8 @@ const coordinator = await register({
     unsubscribeUser(roomId, userId) {
       console.log("unsubscribeUser", roomId.toString(36), userId);
       states.get(roomId)!.subscribers.delete(userId);
+      let playerIdx = states.get(roomId)!.game.players.findIndex((p) => p.id === userId);
+      states.get(roomId)!.game.players.splice(playerIdx, 1);
     },
     unsubscribeAll() {
       console.log("unsubscribeAll");
@@ -86,6 +87,10 @@ const coordinator = await register({
         if (player !== undefined) {
           player.direction = message.direction;
         }
+      } else if (message.type === ClientMessageType.StartGame) {
+        //now add the NPC's
+        game.players = [...game.players, ...generateNPCs(NUM_PLAYERS - game.players.length)];
+        startGame(roomId);
       }
     },
   },
@@ -107,6 +112,17 @@ function broadcastUpdates(roomId: RoomId) {
     const msg: ServerMessage = {
       type: ServerMessageType.StateUpdate,
       state: gameState,
+    };
+    coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
+  });
+}
+
+function startGame(roomId: RoomId) {
+  const { subscribers } = states.get(roomId)!;
+  console.log("sending starging game message to all subscribers, count: ", subscribers.size);
+  subscribers.forEach((userId) => {
+    const msg: ServerMessage = {
+      type: ServerMessageType.SrvStartGame,
     };
     coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
   });

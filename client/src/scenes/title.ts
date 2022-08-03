@@ -29,8 +29,9 @@ export class TitleScene extends Phaser.Scene {
         const queryString = url.split("?")[1];
         const queryParams = new URLSearchParams(queryString);
         const roomId = queryParams.get("roomId");
+
         if (roomId !== null) {
-          this.scene.start("game", { connection: await getConnection(client, token, roomId) });
+          this.scene.start("lobby", { connection: await getConnection(client, token, roomId) });
           return;
         }
       }
@@ -50,7 +51,7 @@ export class TitleScene extends Phaser.Scene {
         .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
         .on("pointerdown", async () => {
           const roomId = await client.create(token, new Uint8Array());
-          this.scene.start("game", { connection: await getConnection(client, token, roomId) });
+          this.scene.start("lobby", { connection: await getConnection(client, token, roomId) });
         });
 
       const joinButton = this.add
@@ -71,7 +72,7 @@ export class TitleScene extends Phaser.Scene {
             alert("Please enter an existing room code or create a new game!");
             return;
           }
-          this.scene.start("game", { connection: await getConnection(client, token, roomId) });
+          this.scene.start("lobby", { connection: await getConnection(client, token, roomId) });
         });
 
       const inputTextConfig: InputText.IConfig = {
