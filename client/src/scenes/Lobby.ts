@@ -45,11 +45,9 @@ export class LobbyScene extends Phaser.Scene {
       .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
       .on("pointerdown", async () => {
         this.isAddingPlayers = false;
-
         const msg: ClientMessage = { type: ClientMessageType.StartGame };
         console.log("sending starting game message", msg);
         this.connection.sendMessage(msg);
-        this.scene.start("game", { connection: this.connection });
       });
 
     //title
