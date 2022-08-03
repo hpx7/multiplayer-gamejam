@@ -25,16 +25,17 @@ export class RoomConnection {
     );
   }
 
-  public async disconnect() {
-    this.connection?.disconnect();
-  }
-
   public addListener(listener: UpdateListener) {
     this.listeners.push(listener);
   }
 
   public sendMessage(msg: ClientMessage) {
     this.connection?.write(this.encoder.encode(JSON.stringify(msg)));
+  }
+
+  public disconnect() {
+    this.connection?.disconnect();
+    this.listeners = [];
   }
 
   private handleMessage(data: ArrayBuffer) {

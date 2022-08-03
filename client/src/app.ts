@@ -8,7 +8,7 @@ new Phaser.Game({
   type: Phaser.AUTO,
   width: 800,
   height: 600,
-  scene: [TitleScene, GameScene, LobbyScene],
+  scene: [TitleScene, LobbyScene, GameScene],
   parent: "root",
   dom: { createContainer: true },
 });

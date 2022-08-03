@@ -15,7 +15,7 @@ type RoomId = bigint;
 type UserId = string;
 
 const NUM_CHESTS = 15;
-const NUM_NPCS = 20;
+const NUM_PLAYERS = 10;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -53,12 +53,11 @@ const coordinator = await register({
         });
         //load up chest
       }
-      console.log(tempChestArray);
       console.log("newState", roomId.toString(36), userId, data);
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: [], chests: tempChestArray }, //generateNPCs(NUM_NPCS)
+        game: { players: [], chests: tempChestArray },
       });
     },
     subscribeUser(roomId, userId) {
@@ -72,10 +71,8 @@ const coordinator = await register({
     unsubscribeUser(roomId, userId) {
       console.log("unsubscribeUser", roomId.toString(36), userId);
       states.get(roomId)!.subscribers.delete(userId);
-      let findIndex = states.get(roomId)!.game.players.findIndex((p) => {
-        p.id === userId;
-      });
-      states.get(roomId)!.game.players.splice(findIndex, 1);
+      let playerIdx = states.get(roomId)!.game.players.findIndex((p) => p.id === userId);
+      states.get(roomId)!.game.players.splice(playerIdx, 1);
     },
     unsubscribeAll() {
       console.log("unsubscribeAll");
@@ -92,9 +89,7 @@ const coordinator = await register({
         }
       } else if (message.type === ClientMessageType.StartGame) {
         //now add the NPC's
-        console.log("Recieved Start Game messge, Adding NPCs");
-        game.players = [...game.players, ...generateNPCs(NUM_NPCS)];
-
+        game.players = [...game.players, ...generateNPCs(NUM_PLAYERS - game.players.length)];
         startGame(roomId);
       }
     },
