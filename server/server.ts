@@ -63,6 +63,10 @@ const coordinator = await register({
     subscribeUser(roomId, userId) {
       console.log("subscribeUser", roomId.toString(36), userId);
       const { subscribers, game } = states.get(roomId)!;
+      if (game.players.length >= NUM_PLAYERS) {
+        console.log("game already started, dropping user", roomId.toString(36), userId);
+        return;
+      }
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
         game.players.push(Rebel.create(userId, getRandomBeachPixel()));
@@ -80,7 +84,10 @@ const coordinator = await register({
     onMessage(roomId, userId, data) {
       const dataStr = Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
       console.log("onMessage", roomId.toString(36), userId, dataStr);
-      const { game } = states.get(roomId)!;
+      const { game, subscribers } = states.get(roomId)!;
+      if (!subscribers.has(userId)) {
+        return;
+      }
       const message: ClientMessage = JSON.parse(dataStr);
       if (message.type === ClientMessageType.SetDirection) {
         const player = game.players.find((p) => p.id === userId);
