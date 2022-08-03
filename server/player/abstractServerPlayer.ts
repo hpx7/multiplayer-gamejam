@@ -9,7 +9,7 @@ export default abstract class AbstractServerPlayer {
   x: number;
   y: number;
   direction: Direction;
-  abstract isNpc: boolean;
+  abstract playerType: "npc" | "rebel";
 
   protected constructor(id: string, x: number, y: number) {
     this.id = id;

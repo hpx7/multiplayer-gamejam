@@ -7,8 +7,8 @@ import { Chest, Difficulty, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
-import NPC from "./player/npc.js";
-import RealPlayer from "./player/realPlayer.js";
+import NPC, { isNpc } from "./player/npc.js";
+import Rebel from "./player/realPlayer.js";
 import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
@@ -65,7 +65,7 @@ const coordinator = await register({
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
-        game.players.push(RealPlayer.create(userId, getRandomBeachPixel()));
+        game.players.push(Rebel.create(userId, getRandomBeachPixel()));
       }
     },
     unsubscribeUser(roomId, userId) {
@@ -131,8 +131,8 @@ function startGame(roomId: RoomId) {
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
     game.players.forEach((player) => {
-      if (player.isNpc) {
-        (player as NPC).applyNpcAlgorithm(game);
+      if (isNpc(player)) {
+        player.applyNpcAlgorithm(game);
       }
       player.update();
     });

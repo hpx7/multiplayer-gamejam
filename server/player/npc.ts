@@ -4,7 +4,7 @@ import { assertNever, getNextTile, getRandomElement, isBeachTile, ServerState } 
 import AbstractServerPlayer from "./abstractServerPlayer.js";
 
 export default class NPC extends AbstractServerPlayer {
-  isNpc: true = true;
+  playerType: "npc" = "npc";
 
   private constructor(x: number, y: number) {
     super(Math.random().toString(36).substring(2), x, y);
@@ -36,4 +36,8 @@ function getRandomAdjacentDirection(direction: Direction): Direction {
     default:
       assertNever(direction);
   }
+}
+
+export function isNpc(player: AbstractServerPlayer): player is NPC {
+  return player.playerType === "npc";
 }
