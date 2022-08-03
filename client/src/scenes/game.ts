@@ -105,6 +105,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     const keys = this.input.keyboard.createCursorKeys();
+    let prevDirection = Direction.None;
     const handleKeyEvt = () => {
       let direction: Direction;
       if (keys.up.isDown) {
@@ -119,9 +120,12 @@ export class GameScene extends Phaser.Scene {
         direction = Direction.None;
       }
 
-      const msg = { type: ClientMessageType.SetDirection, direction };
-      console.log("sending msg", msg);
-      this.connection.sendMessage(msg);
+      if (prevDirection !== direction) {
+        prevDirection = direction;
+        const msg = { type: ClientMessageType.SetDirection, direction };
+        console.log("sending msg", msg);
+        this.connection.sendMessage(msg);
+      }
     };
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
