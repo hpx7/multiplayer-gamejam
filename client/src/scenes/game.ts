@@ -38,16 +38,6 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.connection.addListener((msg) => this.handleMessage(msg));
 
-    const roomCodeConfig: InputText.IConfig = {
-      text: `Room Code: ${this.connection.roomId}`,
-      color: "white",
-      fontFamily: "futura",
-      fontSize: "20px",
-      readOnly: true,
-    };
-    const inputText = new InputText(this, this.scale.width + 125, -300, 300, 50, roomCodeConfig).setScrollFactor(0);
-    this.add.existing(inputText);
-
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
     music.play();
 
@@ -62,6 +52,58 @@ export class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, 2688, 2048);
     this.cameras.main.setZoom(0.5, 0.5);
+
+    this.anims.create({
+      key: "walkdown",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkup",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 4,
+        end: 7,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkright",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 8,
+        end: 11,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "walkleft",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 12,
+        end: 15,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "idle",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 0,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "open",
+      frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
+      frameRate: 5,
+      repeat: 0,
+    });
 
     const keys = this.input.keyboard.createCursorKeys();
     const handleKeyEvt = () => {
@@ -128,12 +170,6 @@ export class GameScene extends Phaser.Scene {
 
     this.add.existing(chestSprite);
     this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
-    this.anims.create({
-      key: "open",
-      frames: this.anims.generateFrameNumbers("chest", { frames: [0, 1, 2] }),
-      frameRate: 5,
-      repeat: 0,
-    });
   }
 
   private addPlayer({ id, x, y, name }: Player) {
@@ -151,51 +187,6 @@ export class GameScene extends Phaser.Scene {
     if (id === this.user.id) {
       this.cameras.main.startFollow(sprite, true);
     }
-    this.anims.create({
-      key: "walkdown",
-      frames: this.anims.generateFrameNumbers("player", {
-        start: 0,
-        end: 3,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "walkup",
-      frames: this.anims.generateFrameNumbers("player", {
-        start: 4,
-        end: 7,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "walkright",
-      frames: this.anims.generateFrameNumbers("player", {
-        start: 8,
-        end: 11,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "walkleft",
-      frames: this.anims.generateFrameNumbers("player", {
-        start: 12,
-        end: 15,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "idle",
-      frames: this.anims.generateFrameNumbers("player", {
-        start: 0,
-        end: 0,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
   }
 
   private updatePlayer({ id, x, y, dir }: Player) {
