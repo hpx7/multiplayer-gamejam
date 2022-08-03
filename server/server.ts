@@ -95,6 +95,11 @@ const coordinator = await register({
           player.direction = message.direction;
         }
       } else if (message.type === ClientMessageType.StartGame) {
+        //set one of the players to BlackBeard role
+        //choose random index 0-#players
+        const bbIndex = Math.floor(Math.random() * game.players.length);
+        game.players[bbIndex].role = "blackbeard";
+        console.log(`Player: ${game.players[bbIndex].id} is ${game.players[bbIndex].role}`);
         //now add the NPC's
         game.players = [...game.players, ...generateNPCs(NUM_PLAYERS - game.players.length)];
         startGame(roomId);
@@ -113,6 +118,7 @@ function broadcastUpdates(roomId: RoomId) {
       y: player.y,
       dir: player.direction,
       name: player.name,
+      role: player.role,
     })),
     chests: game.chests,
   };

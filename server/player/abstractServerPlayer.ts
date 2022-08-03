@@ -9,6 +9,7 @@ export default abstract class AbstractServerPlayer {
   x: number;
   y: number;
   direction: Direction;
+  role: "pirate" | "blackbeard";
   abstract playerType: "npc" | "rebel";
 
   protected constructor(id: string, x: number, y: number) {
@@ -17,6 +18,7 @@ export default abstract class AbstractServerPlayer {
     this.y = y;
     this.direction = Direction.None;
     this.name = generatePirateName();
+    this.role = "pirate";
   }
 
   public update() {

@@ -30,6 +30,7 @@ export class GameScene extends Phaser.Scene {
     this.load.tilemapTiledJSON("map", mapUrl);
     this.load.image("tiles", "tiles_sheet.png");
     this.load.spritesheet("player", "pirate-Sheet.png", { frameWidth: 34, frameHeight: 45 });
+    this.load.spritesheet("blackbeard", "bb-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("game-music", "game_music.mp3");
     this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
   }
@@ -51,6 +52,52 @@ export class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, 2688, 2048);
     this.cameras.main.setZoom(0.5, 0.5);
+
+    this.anims.create({
+      key: "bbwalkdown",
+      frames: this.anims.generateFrameNumbers("blackbeard", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "bbwalkup",
+      frames: this.anims.generateFrameNumbers("blackbeard", {
+        start: 4,
+        end: 7,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "bbwalkright",
+      frames: this.anims.generateFrameNumbers("blackbeard", {
+        start: 8,
+        end: 11,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "bbwalkleft",
+      frames: this.anims.generateFrameNumbers("blackbeard", {
+        start: 12,
+        end: 15,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "bbidle",
+      frames: this.anims.generateFrameNumbers("blackbeard", {
+        start: 0,
+        end: 0,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
 
     this.anims.create({
       key: "walkdown",
@@ -171,8 +218,15 @@ export class GameScene extends Phaser.Scene {
     this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
   }
 
-  private addPlayer({ id, x, y, name }: Player) {
-    const sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
+  private addPlayer({ id, x, y, name, role }: Player) {
+    console.log(role);
+    let sprite;
+    if (role === "blackbeard") {
+      sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard").setOrigin(0.5, 1);
+      name = "Black Beard";
+    } else {
+      sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
+    }
     const nameText = new Phaser.GameObjects.Text(this, x, y - sprite.height, name, {
       // eslint-disable-next-line quotes
       fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
@@ -180,6 +234,7 @@ export class GameScene extends Phaser.Scene {
       color: "black",
       fixedHeight: 28,
     }).setOrigin(0.5, 1);
+    console.log(sprite);
     this.add.existing(sprite);
     this.add.existing(nameText);
     this.players.set(id, { sprite, name: nameText });
@@ -188,18 +243,38 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private updatePlayer({ id, x, y, dir }: Player) {
+  private updatePlayer({ id, x, y, dir, role }: Player) {
     const { sprite, name } = this.players.get(id)!;
     if (dir === Direction.Left) {
-      sprite.anims.play("walkleft", true);
+      if (role === "blackbeard") {
+        sprite.anims.play("bbwalkleft", true);
+      } else {
+        sprite.anims.play("walkleft", true);
+      }
     } else if (dir === Direction.Right) {
-      sprite.anims.play("walkright", true);
+      if (role === "blackbeard") {
+        sprite.anims.play("bbwalkright", true);
+      } else {
+        sprite.anims.play("walkright", true);
+      }
     } else if (dir === Direction.Down) {
-      sprite.anims.play("walkdown", true);
+      if (role === "blackbeard") {
+        sprite.anims.play("bbwalkdown", true);
+      } else {
+        sprite.anims.play("walkdown", true);
+      }
     } else if (dir === Direction.Up) {
-      sprite.anims.play("walkup", true);
+      if (role === "blackbeard") {
+        sprite.anims.play("bbwalkup", true);
+      } else {
+        sprite.anims.play("walkup", true);
+      }
     } else if (dir === Direction.None) {
-      sprite.anims.play("idle");
+      if (role === "blackbeard") {
+        sprite.anims.play("bbidle", true);
+      } else {
+        sprite.anims.play("idle", true);
+      }
     }
     sprite.x = x;
     sprite.y = y;
@@ -225,5 +300,6 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     y: from.y + (to.y - from.y) * pctElapsed,
     dir: to.dir,
     name: from.name,
+    role: from.role,
   };
 }

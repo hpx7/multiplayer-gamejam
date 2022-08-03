@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { getRandomElement } from "../utils.js";
 
 export const USED_NAMES = new Set<string>(); //exported to be cleared when new state generated
