@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
 import { GameScene } from "./scenes/game";
-import { LobbyScene } from "./scenes/Lobby";
+import { LobbyScene } from "./scenes/lobby";
 import { TitleScene } from "./scenes/title";
 
 new Phaser.Game({
