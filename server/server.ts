@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
-import { Chest, Difficulty, GameState } from "../shared/state.js";
+import { BlackBeardKillState, Chest, Difficulty, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
@@ -16,6 +16,7 @@ type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
+const BB_COOLOFF = 30000;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -57,7 +58,11 @@ const coordinator = await register({
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: [], chests: tempChestArray },
+        game: {
+          players: [],
+          chests: tempChestArray,
+          blackbeard: { cooloff: BB_COOLOFF, state: BlackBeardKillState.Idle },
+        },
       });
     },
     subscribeUser(roomId, userId) {
@@ -102,7 +107,14 @@ const coordinator = await register({
         console.log(`Player: ${game.players[bbIndex].id} is ${game.players[bbIndex].role}`);
         //now add the NPC's
         game.players = [...game.players, ...generateNPCs(NUM_PLAYERS - game.players.length)];
+        game.blackbeard.state = BlackBeardKillState.Disabled;
         startGame(roomId);
+      } else if (message.type === ClientMessageType.EliminatePlayer) {
+        const player = game.players.find((p) => p.id === message.player);
+        console.log("Received Elim Message: ", roomId, player);
+        suspendPlayer(roomId, player!);
+        game.blackbeard.cooloff = BB_COOLOFF;
+        game.blackbeard.state = BlackBeardKillState.Disabled;
       }
     },
   },
@@ -121,6 +133,10 @@ function broadcastUpdates(roomId: RoomId) {
       role: player.role,
     })),
     chests: game.chests,
+    blackbeard: {
+      cooloff: game.blackbeard.cooloff,
+      state: game.blackbeard.state,
+    },
   };
   subscribers.forEach((userId) => {
     const msg: ServerMessage = {
@@ -143,8 +159,31 @@ function startGame(roomId: RoomId) {
   });
 }
 
+function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
+  console.log("sending suspend game message");
+  //if player, send message, if NPC, just remove from list
+  if (player.playerType === "npc") {
+    //remove it
+    let myGame = states.get(roomId);
+    if (myGame) {
+      let npcPlayerIndex = myGame.game.players.findIndex((p) => p.id == player.id);
+      myGame.game.players.splice(npcPlayerIndex, 1);
+    }
+  } else {
+    const msg: ServerMessage = { type: ServerMessageType.SuspendPlayer };
+    coordinator.stateUpdate(roomId, player.id, Buffer.from(JSON.stringify(msg), "utf8"));
+  }
+}
+
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
+    if (game.blackbeard.state == BlackBeardKillState.Disabled) {
+      game.blackbeard.cooloff -= 50;
+      if (game.blackbeard.cooloff <= 0) {
+        game.blackbeard.state = BlackBeardKillState.Enabled;
+      }
+    }
+
     game.players.forEach((player) => {
       if (isNpc(player)) {
         player.applyNpcAlgorithm(game);
