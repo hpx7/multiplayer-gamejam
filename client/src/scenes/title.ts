@@ -19,10 +19,6 @@ export class TitleScene extends Phaser.Scene {
     const music = this.sound.add("title-music", { loop: true, volume: 0.25 });
     music.play();
 
-    this.events.on("shutdown", () => {
-      music.stop();
-    });
-
     getToken(client).then(async (token) => {
       const url = window.location === window.parent.location ? document.location.href : document.referrer;
       if (url.includes("?")) {
@@ -51,7 +47,7 @@ export class TitleScene extends Phaser.Scene {
         .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
         .on("pointerdown", async () => {
           const roomId = await client.create(token, new Uint8Array());
-          this.scene.start("lobby", { connection: await getConnection(client, token, roomId) });
+          this.scene.start("lobby", { connection: await getConnection(client, token, roomId), music });
         });
 
       const joinButton = this.add
@@ -72,7 +68,7 @@ export class TitleScene extends Phaser.Scene {
             alert("Please enter an existing room code or create a new game!");
             return;
           }
-          this.scene.start("lobby", { connection: await getConnection(client, token, roomId) });
+          this.scene.start("lobby", { connection: await getConnection(client, token, roomId), music });
         });
 
       const inputTextConfig: InputText.IConfig = {
