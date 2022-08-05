@@ -190,7 +190,6 @@ export class GameScene extends Phaser.Scene {
       state.chests.forEach((c) => {
         this.addChest(c);
       });
-      console.log(this.chests);
     }
 
     state.players.forEach((player) => {
