@@ -212,11 +212,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private addChest({ id, x, y, reward, difficulty }: Chest) {
-    //convert x,y to pixel
-    x *= 64;
-    y *= 64;
-    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
-
+    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest");
     this.add.existing(chestSprite);
     this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
   }
