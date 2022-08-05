@@ -48,3 +48,35 @@ export const pixelToTile = (x: number, y: number): { x: number; y: number } => {
 export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
 }
+
+export function getListofElibibleTargets(
+  index?: number,
+  position?: { x?: number; y?: number },
+  state?:
+    | {
+        subscribers: Set<string>;
+        game: ServerState;
+      }
+    | undefined
+): Array<{ id: string; distance: number }> {
+  let targetArray: Array<{ id: string; distance: number }> = [];
+  state?.game.players.forEach((p, i) => {
+    //not blackbeard
+    if (i != index) {
+      //Distance = |P-E| = |(3,3)-(1,2)| = |(2,1)| = sqrt(2*2+1*1) = sqrt(5) = 2.23
+      const distanceVector = { x: 0, y: 0 };
+      //convert to tiles
+      if (position?.x) {
+        distanceVector.x = Math.abs(position.x - p.x) / 64;
+      }
+      if (position?.y) {
+        distanceVector.y = Math.abs(position.y - p.y) / 64;
+      }
+      const distance = Math.sqrt(distanceVector.x * distanceVector.x + distanceVector.y * distanceVector.y);
+      if (distance <= 3.5) {
+        targetArray.push({ id: p.id, distance: distance });
+      }
+    }
+  });
+  return targetArray;
+}

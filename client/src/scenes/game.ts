@@ -185,36 +185,9 @@ export class GameScene extends Phaser.Scene {
         return;
       }
 
-      //get state
-      if (this.buffer) {
-        const { state } = this.buffer.getInterpolatedState(Date.now());
-        //get BB's position
-        let bbPosition = getBBPosition(this.bbID, state);
-        let targetArray: Array<{ id: string; distance: number }> = getListofElibibleTargets(
-          this.bbID,
-          bbPosition,
-          state
-        );
-        //if no eligible targets, bail
-        if (!targetArray) {
-          return;
-        }
-        //find the target which is closest
-        let target = targetArray.reduce(
-          (previousValue: { id: string; distance: number }, currentValue: { id: string; distance: number }) => {
-            if (previousValue.distance < currentValue.distance) {
-              return previousValue;
-            } else {
-              return currentValue;
-            }
-          },
-          { id: "", distance: Infinity }
-        );
-
-        //Tell server to eliminate player
-        const msg: ClientMessage = { type: ClientMessageType.EliminatePlayer, player: target.id };
-        this.connection.sendMessage(msg);
-      }
+      //Tell server to eliminate player
+      const msg: ClientMessage = { type: ClientMessageType.EliminatePlayer };
+      this.connection.sendMessage(msg);
     });
 
     let prevDirection = Direction.None;
@@ -475,37 +448,4 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     role: from.role,
     suspended: from.suspended,
   };
-}
-
-function getBBPosition(bbid: string | undefined, state: GameState): { x: number; y: number } {
-  let bbplayer = state.players.findIndex((p) => {
-    return p.id == bbid;
-  });
-  return {
-    x: state.players[bbplayer].x,
-    y: state.players[bbplayer].y,
-  };
-}
-
-function getListofElibibleTargets(
-  id: string,
-  position: { x: number; y: number },
-  state: GameState
-): Array<{ id: string; distance: number }> {
-  let targetArray: Array<{ id: string; distance: number }> = [];
-  state.players.forEach((p) => {
-    //not blackbeard
-    if (p.id != id) {
-      //Distance = |P-E| = |(3,3)-(1,2)| = |(2,1)| = sqrt(2*2+1*1) = sqrt(5) = 2.23
-      const distanceVector = { x: 0, y: 0 };
-      //convert to tiles
-      distanceVector.x = Math.abs(position.x - p.x) / 64;
-      distanceVector.y = Math.abs(position.y - p.y) / 64;
-      const distance = Math.sqrt(distanceVector.x * distanceVector.x + distanceVector.y * distanceVector.y);
-      if (distance <= 3.5) {
-        targetArray.push({ id: p.id, distance: distance });
-      }
-    }
-  });
-  return targetArray;
 }

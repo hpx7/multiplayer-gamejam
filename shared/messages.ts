@@ -33,7 +33,6 @@ export type StartGameMessage = {
 
 export type EliminatePlayerMessage = {
   type: ClientMessageType.EliminatePlayer;
-  player: string;
 };
 
 export type ServerMessage = StateUpdateMessage | SrvStartGameMessage| SrvSuspendPlayerMsg;

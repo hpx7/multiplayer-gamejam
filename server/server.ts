@@ -9,14 +9,14 @@ import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import Rebel from "./player/realPlayer.js";
-import { isBeachTile, pixelToTile, ServerState } from "./utils.js";
+import { getListofElibibleTargets, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
-const BB_COOLOFF = 5000;
+const BB_COOLOFF = 30000;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -110,12 +110,16 @@ const coordinator = await register({
         game.blackbeard.state = BlackBeardKillState.Disabled;
         startGame(roomId);
       } else if (message.type === ClientMessageType.EliminatePlayer) {
-        const player = game.players.find((p) => p.id === message.player);
-        console.log("Received Elim Message: ", roomId, player);
-        suspendPlayer(roomId, player!);
-        console.log(player);
-        game.blackbeard.cooloff = BB_COOLOFF;
-        game.blackbeard.state = BlackBeardKillState.Disabled;
+        //const player = game.players.find((p) => p.id === message.player);
+        console.log("Received Elim Message: ");
+        const eliminatedPlayerIndex = findTargetIndex(roomId);
+        if (eliminatedPlayerIndex != undefined) {
+          const player = game.players[eliminatedPlayerIndex];
+          suspendPlayer(roomId, player!);
+          console.log(player);
+          game.blackbeard.cooloff = BB_COOLOFF;
+          game.blackbeard.state = BlackBeardKillState.Disabled;
+        }
       }
     },
   },
@@ -162,7 +166,7 @@ function startGame(roomId: RoomId) {
 }
 
 function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
-  console.log("sending suspend game message");
+  console.log("sending suspend game message", player);
   //if player, send message, if NPC, just remove from list
   let myGame = states.get(roomId);
   let playerIndex;
@@ -177,6 +181,50 @@ function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
     coordinator.stateUpdate(roomId, player.id, Buffer.from(JSON.stringify(msg), "utf8")); */
     myGame.game.players[playerIndex].suspended = true;
   }
+}
+
+function findTargetIndex(roomId: RoomId): number | undefined {
+  console.log("Finding nearest target to Blackbeard");
+
+  //get BB's position
+  const myGame = states.get(roomId);
+  const bbIndex = myGame?.game.players.findIndex((p) => p.role == "blackbeard");
+  let bbLocation: { x?: number; y?: number };
+  console.log("blackbeard index", bbIndex);
+  let targetArray;
+  if (bbIndex == undefined || bbIndex < 0) {
+    return undefined;
+  }
+
+  bbLocation = { x: myGame?.game.players[bbIndex].x, y: myGame?.game.players[bbIndex].y };
+  console.log("blackbeard location", bbLocation);
+
+  if (bbLocation == undefined) {
+    return undefined;
+  }
+
+  targetArray = getListofElibibleTargets(bbIndex, bbLocation, myGame);
+  console.log("target array: ", targetArray);
+  //if no eligible targets, bail
+
+  if (targetArray.length == 0 || targetArray == undefined) {
+    return undefined;
+  }
+
+  //find the target which is closest
+  let tempTarget = targetArray.reduce(
+    (previousValue: { id: string; distance: number }, currentValue: { id: string; distance: number }) => {
+      if (previousValue.distance < currentValue.distance) {
+        return previousValue;
+      } else {
+        return currentValue;
+      }
+    },
+    { id: "", distance: Infinity }
+  );
+
+  console.log("tempTarget: ", tempTarget);
+  return myGame?.game.players.findIndex((p) => p.id === tempTarget.id);
 }
 
 setInterval(() => {
