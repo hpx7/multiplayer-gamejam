@@ -20,7 +20,7 @@ export enum Direction {
   Right,
 }
 
-export type ClientMessage = SetDirectionMessage | StartGameMessage| EliminatePlayerMessage;
+export type ClientMessage = SetDirectionMessage | StartGameMessage | EliminatePlayerMessage;
 
 export type SetDirectionMessage = {
   type: ClientMessageType.SetDirection;
@@ -36,7 +36,7 @@ export type EliminatePlayerMessage = {
   player: string;
 };
 
-export type ServerMessage = StateUpdateMessage | SrvStartGameMessage| SrvSuspendPlayerMsg;
+export type ServerMessage = StateUpdateMessage | SrvStartGameMessage | SrvSuspendPlayerMsg;
 
 export type StateUpdateMessage = {
   type: ServerMessageType.StateUpdate;
@@ -48,6 +48,6 @@ export type SrvStartGameMessage = {
   type: ServerMessageType.SrvStartGame;
 };
 
-export type SrvSuspendPlayerMsg ={
+export type SrvSuspendPlayerMsg = {
   type: ServerMessageType.SuspendPlayer;
 };
