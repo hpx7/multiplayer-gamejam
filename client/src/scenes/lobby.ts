@@ -25,6 +25,8 @@ export class LobbyScene extends Phaser.Scene {
   create() {
     this.connection.addListener((msg) => this.handleMessage(msg));
 
+    sessionStorage.setItem("roomId", this.connection.roomId);
+
     /**
      * Setting up Lobby UI
      */

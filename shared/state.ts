@@ -6,7 +6,7 @@ export type Player = {
   y: number;
   dir: Direction;
   name: string;
-  role: "pirate" | "blackbeard"
+  role: "pirate" | "blackbeard";
   suspended: boolean;
 };
 
@@ -24,7 +24,7 @@ export type Chest = {
   reward: number;
 };
 
-export enum BlackBeardKillState{
+export enum BlackBeardKillState {
   Idle,
   Enabled,
   Disabled,
@@ -33,9 +33,8 @@ export enum BlackBeardKillState{
 export type GameState = {
   players: Player[];
   chests: Chest[];
-  blackbeard:{
-    cooloff: number,
+  blackbeard: {
+    cooloff: number;
     state: BlackBeardKillState;
   };
-   
 };
