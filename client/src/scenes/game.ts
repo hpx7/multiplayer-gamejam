@@ -185,12 +185,17 @@ export class GameScene extends Phaser.Scene {
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
 
-    if (this.chests.size === 0) {
-      //first time through
-      state.chests.forEach((c) => {
+    state.chests.forEach((c) => {
+      if (!this.chests.has(c.id)) {
         this.addChest(c);
-      });
-    }
+      }
+    });
+    this.chests.forEach((chest, chestId) => {
+      if (!state.chests.some((c) => c.id === chestId)) {
+        chest.object.destroy();
+        this.chests.delete(chestId);
+      }
+    });
 
     state.players.forEach((player) => {
       if (!this.players.has(player.id)) {
