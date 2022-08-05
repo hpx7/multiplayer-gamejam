@@ -8,7 +8,7 @@ export class LobbyScene extends Phaser.Scene {
   private connection!: RoomConnection;
   private lobbyText: any;
   private isAddingPlayers = true;
-  private music: any;
+  private music: Phaser.Sound.BaseSound;
 
   constructor() {
     super("lobby");
@@ -27,6 +27,10 @@ export class LobbyScene extends Phaser.Scene {
 
   create() {
     this.connection.addListener((msg) => this.handleMessage(msg));
+
+    this.events.on("shutdown", () => {
+      this.music.stop();
+    });
 
     sessionStorage.setItem("roomId", this.connection.roomId);
 
