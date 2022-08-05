@@ -55,30 +55,11 @@ export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
 }
 
-export function getClosestTarget(
-  index?: number,
-  position?: { x?: number; y?: number },
-  state?:
-    | {
-        subscribers: Set<string>;
-        game: ServerState;
-      }
-    | undefined
-):
-  | {
-      id: string;
-      distance: number;
-    }
-  | undefined {
-  let targetArray: Array<{ id: string; distance: number }> = [];
-  state?.game.players.forEach((p, i) => {
-    //not blackbeard
-    if (i != index) {
-      if (position?.x === undefined || position?.y === undefined) {
-        return undefined;
-      }
-      console.log("positions:", position.x, position.y, p.x, p.y);
-      const distance = dist(position?.x, position?.y, p.x, p.y) / 64;
+export function getClosestTarget(position: { x: number; y: number }, game: ServerState): string | undefined {
+  let targetArray: { id: string; distance: number }[] = [];
+  game.players.forEach((p) => {
+    if (p.role !== "blackbeard") {
+      const distance = dist(position.x, position.y, p.x, p.y) / 64;
       if (distance <= 3.5) {
         targetArray.push({ id: p.id, distance: distance });
       }
@@ -101,5 +82,5 @@ export function getClosestTarget(
     { id: "", distance: Infinity }
   );
 
-  return tempTarget;
+  return tempTarget.id;
 }
