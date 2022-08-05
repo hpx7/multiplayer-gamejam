@@ -32,7 +32,7 @@ export class TitleScene extends Phaser.Scene {
         const roomId = queryParams.get("roomId");
 
         if (roomId !== null) {
-          this.scene.start("lobby", { connection: await getConnection(client, token, roomId) });
+          this.scene.start("lobby", { connection: await getConnection(client, token, roomId), music });
           return;
         }
       }
