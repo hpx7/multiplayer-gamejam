@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
-import { Chest, Difficulty, GameState } from "../shared/state.js";
+import { Chest, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
@@ -29,27 +29,16 @@ const coordinator = await register({
   authInfo: { anonymous: { separator: "-" } },
   store: {
     newState(roomId, userId, data) {
-      //load up chests here
-      const tempChestArray: Chest[] = [];
-      for (let index = 0; index < NUM_CHESTS; index++) {
-        //find random beach spot
-        const newSpot = getRandomBeachPixel();
-        const newReward = 1 + Math.floor(Math.random() * 3);
-        const newDifficulty: Difficulty = Math.floor(Math.random() * 3);
-        const newID = Math.random().toString(36).substring(2);
-        tempChestArray.push({
-          id: newID,
-          x: newSpot.x,
-          y: newSpot.y,
-          reward: newReward,
-          difficulty: newDifficulty,
-        });
-      }
       console.log("newState", roomId.toString(36), userId, data);
+      // load up chests
+      const chests: Chest[] = [];
+      for (let index = 0; index < NUM_CHESTS; index++) {
+        chests.push(getRandomChest());
+      }
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: [], chests: tempChestArray },
+        game: { players: [], chests },
       });
     },
     subscribeUser(roomId, userId) {
@@ -71,6 +60,7 @@ const coordinator = await register({
     },
     unsubscribeAll() {
       console.log("unsubscribeAll");
+      states.clear();
     },
     onMessage(roomId, userId, data) {
       const dataStr = Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
@@ -150,6 +140,10 @@ setInterval(() => {
         }
       }
     });
+    // spawn chests
+    while (game.chests.length < NUM_CHESTS) {
+      game.chests.push(getRandomChest());
+    }
     broadcastUpdates(roomId);
   });
 }, 50);
@@ -169,4 +163,15 @@ function generateNPCs(numNPCs: number): AbstractServerPlayer[] {
   return Array(numNPCs)
     .fill(undefined)
     .map(() => NPC.create(getRandomBeachPixel()));
+}
+
+function getRandomChest(): Chest {
+  const { x, y } = getRandomBeachPixel();
+  return {
+    id: Math.random().toString(36).substring(2),
+    x,
+    y,
+    reward: 1 + Math.floor(Math.random() * 3),
+    difficulty: Math.floor(Math.random() * 3),
+  };
 }
