@@ -9,7 +9,7 @@ import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import Rebel from "./player/realPlayer.js";
-import { getClosestTargets, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
+import { getClosestTarget, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
@@ -179,7 +179,7 @@ function findTargetIndex(roomId: RoomId): number | undefined {
   const bbIndex = myGame?.game.players.findIndex((p) => p.role == "blackbeard");
   let bbLocation: { x?: number; y?: number };
   console.log("blackbeard index", bbIndex);
-  let targetArray;
+
   if (bbIndex == undefined || bbIndex < 0) {
     return undefined;
   }
@@ -191,28 +191,14 @@ function findTargetIndex(roomId: RoomId): number | undefined {
     return undefined;
   }
 
-  targetArray = getClosestTargets(bbIndex, bbLocation, myGame);
-  console.log("target array: ", targetArray);
+  let tempTarget = getClosestTarget(bbIndex, bbLocation, myGame);
   //if no eligible targets, bail
 
-  if (targetArray.length == 0 || targetArray == undefined) {
+  if (tempTarget == undefined) {
     return undefined;
   }
-
-  //find the target which is closest
-  let tempTarget = targetArray.reduce(
-    (previousValue: { id: string; distance: number }, currentValue: { id: string; distance: number }) => {
-      if (previousValue.distance < currentValue.distance) {
-        return previousValue;
-      } else {
-        return currentValue;
-      }
-    },
-    { id: "", distance: Infinity }
-  );
-
-  console.log("tempTarget: ", tempTarget);
-  return myGame?.game.players.findIndex((p) => p.id === tempTarget.id);
+  console.log("Target: ", tempTarget);
+  return myGame?.game.players.findIndex((p) => p.id === tempTarget?.id);
 }
 
 setInterval(() => {

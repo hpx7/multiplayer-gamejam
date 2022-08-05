@@ -55,7 +55,7 @@ export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
 }
 
-export function getClosestTargets(
+export function getClosestTarget(
   index?: number,
   position?: { x?: number; y?: number },
   state?:
@@ -64,21 +64,16 @@ export function getClosestTargets(
         game: ServerState;
       }
     | undefined
-): Array<{ id: string; distance: number }> {
+):
+  | {
+      id: string;
+      distance: number;
+    }
+  | undefined {
   let targetArray: Array<{ id: string; distance: number }> = [];
   state?.game.players.forEach((p, i) => {
     //not blackbeard
     if (i != index) {
-      /*       //Distance = |P-E| = |(3,3)-(1,2)| = |(2,1)| = sqrt(2*2+1*1) = sqrt(5) = 2.23
-      const distanceVector = { x: 0, y: 0 };
-      //convert to tiles
-      if (position?.x) {
-        distanceVector.x = Math.abs(position.x - p.x) / 64;
-      }
-      if (position?.y) {
-        distanceVector.y = Math.abs(position.y - p.y) / 64;
-      }
-      const distance = Math.sqrt(distanceVector.x * distanceVector.x + distanceVector.y * distanceVector.y); */
       if (position?.x === undefined || position?.y === undefined) {
         return undefined;
       }
@@ -89,5 +84,22 @@ export function getClosestTargets(
       }
     }
   });
-  return targetArray;
+
+  if (targetArray.length == 0 || targetArray == undefined) {
+    return undefined;
+  }
+
+  //find the target which is closest
+  let tempTarget = targetArray.reduce(
+    (previousValue: { id: string; distance: number }, currentValue: { id: string; distance: number }) => {
+      if (previousValue.distance < currentValue.distance) {
+        return previousValue;
+      } else {
+        return currentValue;
+      }
+    },
+    { id: "", distance: Infinity }
+  );
+
+  return tempTarget;
 }
