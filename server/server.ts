@@ -9,7 +9,7 @@ import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import Rebel from "./player/realPlayer.js";
-import { getListofElibibleTargets, isBeachTile, pixelToTile, ServerState } from "./utils.js";
+import { dist, getListofElibibleTargets, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
@@ -31,20 +31,13 @@ const coordinator = await register({
   store: {
     newState(roomId, userId, data) {
       //load up chests here
-      let tempChestArray: Chest[] = [];
+      const tempChestArray: Chest[] = [];
       for (let index = 0; index < NUM_CHESTS; index++) {
         //find random beach spot
-        let newSpot;
-        do {
-          newSpot = {
-            x: Math.floor(Math.random() * 128),
-            y: Math.floor(Math.random() * 64),
-          };
-        } while (!isBeachTile(newSpot));
-        let newReward = 1 + Math.floor(Math.random() * 3);
-
-        let newDifficulty: Difficulty = Math.floor(Math.random() * 3);
-        let newID = Math.random().toString(36).substring(2);
+        const newSpot = getRandomBeachPixel();
+        const newReward = 1 + Math.floor(Math.random() * 3);
+        const newDifficulty: Difficulty = Math.floor(Math.random() * 3);
+        const newID = Math.random().toString(36).substring(2);
         tempChestArray.push({
           id: newID,
           x: newSpot.x,
@@ -52,7 +45,6 @@ const coordinator = await register({
           reward: newReward,
           difficulty: newDifficulty,
         });
-        //load up chest
       }
       console.log("newState", roomId.toString(36), userId, data);
       USED_NAMES.clear();
@@ -87,7 +79,7 @@ const coordinator = await register({
     },
     onMessage(roomId, userId, data) {
       const dataStr = Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
-      console.log("onMessage", roomId.toString(36), userId, dataStr);
+      // console.log("onMessage", roomId.toString(36), userId, dataStr);
       const { game, subscribers } = states.get(roomId)!;
       if (!subscribers.has(userId)) {
         return;
@@ -240,6 +232,14 @@ setInterval(() => {
         player.applyNpcAlgorithm(game);
       }
       player.update();
+
+      // chest collisions
+      for (let i = game.chests.length - 1; i >= 0; i--) {
+        const chest = game.chests[i];
+        if (dist(player.x, player.y, chest.x, chest.y) < 30) {
+          game.chests.splice(i, 1);
+        }
+      }
     });
     broadcastUpdates(roomId);
   });

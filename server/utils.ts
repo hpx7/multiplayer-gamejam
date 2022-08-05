@@ -45,6 +45,12 @@ export const pixelToTile = (x: number, y: number): { x: number; y: number } => {
   return { x: Math.floor(x / mapData.tilewidth), y: Math.floor(y / mapData.tileheight) };
 };
 
+export function dist(x1: number, y1: number, x2: number, y2: number) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
 }
