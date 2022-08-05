@@ -6,6 +6,7 @@ import { RoomConnection } from "../connection";
 
 export class LobbyScene extends Phaser.Scene {
   private connection!: RoomConnection;
+  private music!: Phaser.Sound.BaseSound;
   private lobbyText: any;
   private isAddingPlayers = true;
 
@@ -13,17 +14,25 @@ export class LobbyScene extends Phaser.Scene {
     super("lobby");
   }
 
-  init({ connection }: { connection: RoomConnection }) {
+  init({ connection, music }: { connection: RoomConnection; music: Phaser.Sound.BaseSound }) {
     this.connection = connection;
+    this.music = music;
   }
 
   preload() {
     this.load.image("help", "whitequestion-mark.png");
     this.load.image("back", "whiteback-button.png");
+    this.load.audio("title-music", "title_music.mp3");
   }
 
   create() {
     this.connection.addListener((msg) => this.handleMessage(msg));
+
+    this.events.on("shutdown", () => {
+      this.music.stop();
+    });
+
+    sessionStorage.setItem("roomId", this.connection.roomId);
 
     /**
      * Setting up Lobby UI
