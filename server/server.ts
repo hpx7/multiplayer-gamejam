@@ -175,30 +175,26 @@ function findTargetIndex(roomId: RoomId): number | undefined {
   console.log("Finding nearest target to Blackbeard");
 
   //get BB's position
-  const myGame = states.get(roomId);
-  const bbIndex = myGame?.game.players.findIndex((p) => p.role == "blackbeard");
-  let bbLocation: { x?: number; y?: number };
-  console.log("blackbeard index", bbIndex);
+  const { game } = states.get(roomId)!;
+  const bbIndex = game.players.findIndex((p) => p.role == "blackbeard");
 
   if (bbIndex == undefined || bbIndex < 0) {
     return undefined;
   }
 
-  bbLocation = { x: myGame?.game.players[bbIndex].x, y: myGame?.game.players[bbIndex].y };
-  console.log("blackbeard location", bbLocation);
-
+  const bbLocation = { x: game.players[bbIndex].x, y: game.players[bbIndex].y };
   if (bbLocation == undefined) {
     return undefined;
   }
 
-  let tempTarget = getClosestTarget(bbIndex, bbLocation, myGame);
+  let tempTarget = getClosestTarget(bbLocation, game);
   //if no eligible targets, bail
 
   if (tempTarget == undefined) {
     return undefined;
   }
   console.log("Target: ", tempTarget);
-  return myGame?.game.players.findIndex((p) => p.id === tempTarget?.id);
+  return game.players.findIndex((p) => p.id === tempTarget);
 }
 
 setInterval(() => {
