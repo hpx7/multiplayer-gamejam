@@ -209,7 +209,6 @@ export class GameScene extends Phaser.Scene {
         if (prevDirection !== direction) {
           prevDirection = direction;
           const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
-          console.log("sending msg", msg);
           this.connection.sendMessage(msg);
         }
       }
@@ -251,7 +250,6 @@ export class GameScene extends Phaser.Scene {
         if (!player.suspended) {
           this.updatePlayer(player);
         } else if (player.suspended && !this.previousSuspendState && player.id === this.user.id) {
-          console.log("here");
           //ensure this happens on the transition
           this.previousSuspendState = true;
           //disables keybaord
@@ -386,7 +384,6 @@ export class GameScene extends Phaser.Scene {
 
     //tweening colors
     if (this.bbStatus == "enabled" && role == "blackbeard" && this.previousStatus != this.bbStatus) {
-      console.log("setting Blackbeard to killmode");
       this.previousStatus = this.bbStatus;
       const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
       const newColor = Phaser.Display.Color.ValueToColor(this.bbWarningColor);
@@ -405,7 +402,6 @@ export class GameScene extends Phaser.Scene {
         },
       });
     } else if (this.bbStatus == "disabled" && role == "blackbeard" && this.previousStatus != this.bbStatus) {
-      console.log("setting Blackbeard back to normal");
       this.previousStatus = this.bbStatus;
       const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
 

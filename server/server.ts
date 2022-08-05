@@ -9,14 +9,14 @@ import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import Rebel from "./player/realPlayer.js";
-import { getListofElibibleTargets, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
+import { getListofEligibleTargets, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
-const BB_COOLOFF = 30000;
+const BB_COOLOFF = 5000;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -107,7 +107,6 @@ const coordinator = await register({
         if (eliminatedPlayerIndex != undefined) {
           const player = game.players[eliminatedPlayerIndex];
           suspendPlayer(roomId, player!);
-          console.log(player);
           game.blackbeard.cooloff = BB_COOLOFF;
           game.blackbeard.state = BlackBeardKillState.Disabled;
         }
@@ -157,7 +156,6 @@ function startGame(roomId: RoomId) {
 }
 
 function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
-  console.log("sending suspend game message", player);
   //if player, send message, if NPC, just remove from list
   let myGame = states.get(roomId);
   let playerIndex;
@@ -168,8 +166,7 @@ function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
     //remove it
     myGame.game.players.splice(playerIndex, 1);
   } else if (myGame && playerIndex) {
-    /* const msg: ServerMessage = { type: ServerMessageType.SuspendPlayer };
-    coordinator.stateUpdate(roomId, player.id, Buffer.from(JSON.stringify(msg), "utf8")); */
+    console.log("suspending: ", myGame.game.players[playerIndex]);
     myGame.game.players[playerIndex].suspended = true;
   }
 }
@@ -194,7 +191,7 @@ function findTargetIndex(roomId: RoomId): number | undefined {
     return undefined;
   }
 
-  targetArray = getListofElibibleTargets(bbIndex, bbLocation, myGame);
+  targetArray = getListofEligibleTargets(bbIndex, bbLocation, myGame);
   console.log("target array: ", targetArray);
   //if no eligible targets, bail
 

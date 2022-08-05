@@ -55,7 +55,7 @@ export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
 }
 
-export function getListofElibibleTargets(
+export function getListofEligibleTargets(
   index?: number,
   position?: { x?: number; y?: number },
   state?:
@@ -69,7 +69,7 @@ export function getListofElibibleTargets(
   state?.game.players.forEach((p, i) => {
     //not blackbeard
     if (i != index) {
-      //Distance = |P-E| = |(3,3)-(1,2)| = |(2,1)| = sqrt(2*2+1*1) = sqrt(5) = 2.23
+      /*       //Distance = |P-E| = |(3,3)-(1,2)| = |(2,1)| = sqrt(2*2+1*1) = sqrt(5) = 2.23
       const distanceVector = { x: 0, y: 0 };
       //convert to tiles
       if (position?.x) {
@@ -78,7 +78,12 @@ export function getListofElibibleTargets(
       if (position?.y) {
         distanceVector.y = Math.abs(position.y - p.y) / 64;
       }
-      const distance = Math.sqrt(distanceVector.x * distanceVector.x + distanceVector.y * distanceVector.y);
+      const distance = Math.sqrt(distanceVector.x * distanceVector.x + distanceVector.y * distanceVector.y); */
+      if (position?.x === undefined || position?.y === undefined) {
+        return undefined;
+      }
+      console.log("positions:", position.x, position.y, p.x, p.y);
+      const distance = dist(position?.x, position?.y, p.x, p.y) / 64;
       if (distance <= 3.5) {
         targetArray.push({ id: p.id, distance: distance });
       }
