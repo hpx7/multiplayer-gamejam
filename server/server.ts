@@ -38,7 +38,7 @@ const coordinator = await register({
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: [], chests: chests },
+        game: { players: [], chests },
       });
     },
     subscribeUser(roomId, userId) {
