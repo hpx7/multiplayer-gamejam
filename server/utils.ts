@@ -55,7 +55,7 @@ export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
 }
 
-export function getListofEligibleTargets(
+export function getClosestTargets(
   index?: number,
   position?: { x?: number; y?: number },
   state?:

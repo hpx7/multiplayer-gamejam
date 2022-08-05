@@ -9,7 +9,7 @@ import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import Rebel from "./player/realPlayer.js";
-import { getListofEligibleTargets, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
+import { getClosestTargets, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
@@ -191,7 +191,7 @@ function findTargetIndex(roomId: RoomId): number | undefined {
     return undefined;
   }
 
-  targetArray = getListofEligibleTargets(bbIndex, bbLocation, myGame);
+  targetArray = getClosestTargets(bbIndex, bbLocation, myGame);
   console.log("target array: ", targetArray);
   //if no eligible targets, bail
 
