@@ -226,12 +226,17 @@ export class GameScene extends Phaser.Scene {
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
 
-    if (this.chests.size === 0) {
-      //first time through
-      state.chests.forEach((c) => {
+    state.chests.forEach((c) => {
+      if (!this.chests.has(c.id)) {
         this.addChest(c);
-      });
-    }
+      }
+    });
+    this.chests.forEach((chest, chestId) => {
+      if (!state.chests.some((c) => c.id === chestId)) {
+        chest.object.destroy();
+        this.chests.delete(chestId);
+      }
+    });
 
     if (state.blackbeard.state == BlackBeardKillState.Enabled) {
       this.bbStatus = "enabled";
@@ -294,11 +299,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private addChest({ id, x, y, reward, difficulty }: Chest) {
-    //convert x,y to pixel
-    x *= 64;
-    y *= 64;
-    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest").setOrigin(0, 0);
-
+    const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest");
     this.add.existing(chestSprite);
     this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
   }
@@ -306,11 +307,11 @@ export class GameScene extends Phaser.Scene {
   private addPlayer({ id, x, y, name, role }: Player) {
     let sprite: GameObjects.Sprite;
     if (role === "blackbeard") {
-      sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard").setOrigin(0.5, 1);
+      sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard");
       name = "Black Beard";
       this.bbID = id;
     } else {
-      sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
+      sprite = new Phaser.GameObjects.Sprite(this, x, y, "player");
     }
     sprite.setTint(this.normalTintColor);
     const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
@@ -336,7 +337,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: "24px",
       color: "black",
       fixedHeight: 28,
-    }).setOrigin(0.5, 1);
+    }).setOrigin(0.5, 0);
     this.add.existing(sprite);
     this.add.existing(nameText);
     this.players.set(id, { sprite, name: nameText });
