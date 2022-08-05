@@ -16,7 +16,7 @@ type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
-const BB_COOLOFF = 5000;
+const BB_COOLOFF = 30000;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
