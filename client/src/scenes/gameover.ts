@@ -18,7 +18,7 @@ export class GameOver extends Phaser.Scene {
     //Start Game Button
     const { width, height } = this.scale;
     const createButton = this.add
-      .text(width / 2, (9 * height) / 10, "START GAME", {
+      .text(width / 2, (9 * height) / 10, "BACK TO TITLE SCREEN", {
         fontSize: "20px",
         fontFamily: "futura",
       })
