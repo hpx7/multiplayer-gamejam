@@ -6,9 +6,9 @@ import { RoomConnection } from "../connection";
 
 export class LobbyScene extends Phaser.Scene {
   private connection!: RoomConnection;
+  private music!: Phaser.Sound.BaseSound;
   private lobbyText: any;
   private isAddingPlayers = true;
-  private music: Phaser.Sound.BaseSound;
 
   constructor() {
     super("lobby");

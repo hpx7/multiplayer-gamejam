@@ -22,6 +22,7 @@ export class TitleScene extends Phaser.Scene {
     getToken(client).then(async (token) => {
       const savedRoomId = sessionStorage.getItem("roomId");
       if (savedRoomId !== null) {
+        music.stop();
         this.scene.start("game", { connection: await getConnection(client, token, savedRoomId) });
       }
 
