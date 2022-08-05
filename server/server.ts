@@ -3,19 +3,20 @@ import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { ClientMessage, ClientMessageType, ServerMessage, ServerMessageType } from "../shared/messages.js";
-import { Chest, GameState } from "../shared/state.js";
+import { BlackBeardKillState, Chest, GameState } from "../shared/state.js";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import Rebel from "./player/realPlayer.js";
-import { dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
+import { getClosestTarget, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
 type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
+const BB_COOLOFF = 30000;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -38,7 +39,11 @@ const coordinator = await register({
       USED_NAMES.clear();
       states.set(roomId, {
         subscribers: new Set(),
-        game: { players: [], chests },
+        game: {
+          players: [],
+          chests,
+          blackbeard: { cooloff: BB_COOLOFF, state: BlackBeardKillState.Idle },
+        },
       });
     },
     subscribeUser(roomId, userId) {
@@ -83,7 +88,18 @@ const coordinator = await register({
         console.log(`Player: ${game.players[bbIndex].id} is ${game.players[bbIndex].role}`);
         //now add the NPC's
         game.players = [...game.players, ...generateNPCs(NUM_PLAYERS - game.players.length)];
+        game.blackbeard.state = BlackBeardKillState.Disabled;
         startGame(roomId);
+      } else if (message.type === ClientMessageType.EliminatePlayer) {
+        //const player = game.players.find((p) => p.id === message.player);
+        console.log("Received Elim Message: ");
+        const eliminatedPlayerIndex = findTargetIndex(roomId);
+        if (eliminatedPlayerIndex != undefined) {
+          const player = game.players[eliminatedPlayerIndex];
+          suspendPlayer(roomId, player!);
+          game.blackbeard.cooloff = BB_COOLOFF;
+          game.blackbeard.state = BlackBeardKillState.Disabled;
+        }
       }
     },
   },
@@ -100,8 +116,13 @@ function broadcastUpdates(roomId: RoomId) {
       dir: player.direction,
       name: player.name,
       role: player.role,
+      suspended: player.suspended,
     })),
     chests: game.chests,
+    blackbeard: {
+      cooloff: game.blackbeard.cooloff,
+      state: game.blackbeard.state,
+    },
   };
   subscribers.forEach((userId) => {
     const msg: ServerMessage = {
@@ -124,8 +145,57 @@ function startGame(roomId: RoomId) {
   });
 }
 
+function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
+  //if player, send message, if NPC, just remove from list
+  let myGame = states.get(roomId);
+  let playerIndex;
+  if (myGame) {
+    playerIndex = myGame.game.players.findIndex((p) => p.id == player.id);
+  }
+  if (player.playerType === "npc" && myGame && playerIndex) {
+    //remove it
+    myGame.game.players.splice(playerIndex, 1);
+  } else if (myGame && playerIndex) {
+    console.log("suspending: ", myGame.game.players[playerIndex]);
+    myGame.game.players[playerIndex].suspended = true;
+  }
+}
+
+function findTargetIndex(roomId: RoomId): number | undefined {
+  console.log("Finding nearest target to Blackbeard");
+
+  //get BB's position
+  const { game } = states.get(roomId)!;
+  const bbIndex = game.players.findIndex((p) => p.role == "blackbeard");
+
+  if (bbIndex == undefined || bbIndex < 0) {
+    return undefined;
+  }
+
+  const bbLocation = { x: game.players[bbIndex].x, y: game.players[bbIndex].y };
+  if (bbLocation == undefined) {
+    return undefined;
+  }
+
+  let tempTarget = getClosestTarget(bbLocation, game);
+  //if no eligible targets, bail
+
+  if (tempTarget == undefined) {
+    return undefined;
+  }
+  console.log("Target: ", tempTarget);
+  return game.players.findIndex((p) => p.id === tempTarget);
+}
+
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
+    if (game.blackbeard.state == BlackBeardKillState.Disabled) {
+      game.blackbeard.cooloff -= 50;
+      if (game.blackbeard.cooloff <= 0) {
+        game.blackbeard.state = BlackBeardKillState.Enabled;
+      }
+    }
+
     game.players.forEach((player) => {
       if (isNpc(player)) {
         player.applyNpcAlgorithm(game);

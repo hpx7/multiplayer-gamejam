@@ -1,11 +1,15 @@
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
 import { Direction } from "../shared/messages.js";
-import { Chest } from "../shared/state";
+import { BlackBeardKillState, Chest } from "../shared/state";
 
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 export type ServerState = {
   players: AbstractServerPlayer[];
   chests: Chest[];
+  blackbeard: {
+    cooloff: number;
+    state: BlackBeardKillState;
+  };
 };
 
 export const PLAYER_SPEED = 15;
@@ -49,4 +53,34 @@ export function dist(x1: number, y1: number, x2: number, y2: number) {
 
 export function assertNever(shouldBeNever: never): never {
   throw new Error("Was not never: " + shouldBeNever);
+}
+
+export function getClosestTarget(position: { x: number; y: number }, game: ServerState): string | undefined {
+  let targetArray: { id: string; distance: number }[] = [];
+  game.players.forEach((p) => {
+    if (p.role !== "blackbeard") {
+      const distance = dist(position.x, position.y, p.x, p.y) / 64;
+      if (distance <= 3.5) {
+        targetArray.push({ id: p.id, distance: distance });
+      }
+    }
+  });
+
+  if (targetArray.length == 0 || targetArray == undefined) {
+    return undefined;
+  }
+
+  //find the target which is closest
+  let tempTarget = targetArray.reduce(
+    (previousValue: { id: string; distance: number }, currentValue: { id: string; distance: number }) => {
+      if (previousValue.distance < currentValue.distance) {
+        return previousValue;
+      } else {
+        return currentValue;
+      }
+    },
+    { id: "", distance: Infinity }
+  );
+
+  return tempTarget.id;
 }

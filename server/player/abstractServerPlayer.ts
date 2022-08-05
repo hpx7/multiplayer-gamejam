@@ -9,6 +9,7 @@ export default abstract class AbstractServerPlayer {
   x: number;
   y: number;
   direction: Direction;
+  suspended: boolean;
   role: "pirate" | "blackbeard";
   abstract playerType: "npc" | "rebel";
 
@@ -19,6 +20,7 @@ export default abstract class AbstractServerPlayer {
     this.direction = Direction.None;
     this.name = generatePirateName();
     this.role = "pirate";
+    this.suspended = false;
   }
 
   public update() {
