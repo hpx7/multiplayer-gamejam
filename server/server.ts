@@ -145,9 +145,8 @@ setInterval(() => {
       // chest collisions
       for (let i = game.chests.length - 1; i >= 0; i--) {
         const chest = game.chests[i];
-        if (dist(player.x, player.y, chest.x, chest.y) < 25) {
+        if (dist(player.x, player.y, chest.x, chest.y) < 30) {
           game.chests.splice(i, 1);
-          console.log("numChests", game.chests.length);
         }
       }
     });
