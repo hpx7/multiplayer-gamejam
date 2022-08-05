@@ -28,9 +28,7 @@ export class LobbyScene extends Phaser.Scene {
   create() {
     this.connection.addListener((msg) => this.handleMessage(msg));
 
-    this.events.on("shutdown", () => {
-      this.music.stop();
-    });
+    sessionStorage.setItem("roomId", this.connection.roomId);
 
     /**
      * Setting up Lobby UI

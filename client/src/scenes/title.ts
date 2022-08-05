@@ -20,6 +20,11 @@ export class TitleScene extends Phaser.Scene {
     music.play();
 
     getToken(client).then(async (token) => {
+      const savedRoomId = sessionStorage.getItem("roomId");
+      if (savedRoomId !== null) {
+        this.scene.start("game", { connection: await getConnection(client, token, savedRoomId) });
+      }
+
       const url = window.location === window.parent.location ? document.location.href : document.referrer;
       if (url.includes("?")) {
         const queryString = url.split("?")[1];
