@@ -16,7 +16,7 @@ type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
-const BB_COOLOFF = 30000;
+const BB_COOLOFF = 5000;
 
 const states: Map<RoomId, { subscribers: Set<UserId>; game: ServerState }> = new Map();
 
@@ -113,6 +113,7 @@ const coordinator = await register({
         const player = game.players.find((p) => p.id === message.player);
         console.log("Received Elim Message: ", roomId, player);
         suspendPlayer(roomId, player!);
+        console.log(player);
         game.blackbeard.cooloff = BB_COOLOFF;
         game.blackbeard.state = BlackBeardKillState.Disabled;
       }
@@ -131,6 +132,7 @@ function broadcastUpdates(roomId: RoomId) {
       dir: player.direction,
       name: player.name,
       role: player.role,
+      suspended: player.suspended,
     })),
     chests: game.chests,
     blackbeard: {
@@ -162,16 +164,18 @@ function startGame(roomId: RoomId) {
 function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
   console.log("sending suspend game message");
   //if player, send message, if NPC, just remove from list
-  if (player.playerType === "npc") {
+  let myGame = states.get(roomId);
+  let playerIndex;
+  if (myGame) {
+    playerIndex = myGame.game.players.findIndex((p) => p.id == player.id);
+  }
+  if (player.playerType === "npc" && myGame && playerIndex) {
     //remove it
-    let myGame = states.get(roomId);
-    if (myGame) {
-      let npcPlayerIndex = myGame.game.players.findIndex((p) => p.id == player.id);
-      myGame.game.players.splice(npcPlayerIndex, 1);
-    }
-  } else {
-    const msg: ServerMessage = { type: ServerMessageType.SuspendPlayer };
-    coordinator.stateUpdate(roomId, player.id, Buffer.from(JSON.stringify(msg), "utf8"));
+    myGame.game.players.splice(playerIndex, 1);
+  } else if (myGame && playerIndex) {
+    /* const msg: ServerMessage = { type: ServerMessageType.SuspendPlayer };
+    coordinator.stateUpdate(roomId, player.id, Buffer.from(JSON.stringify(msg), "utf8")); */
+    myGame.game.players[playerIndex].suspended = true;
   }
 }
 

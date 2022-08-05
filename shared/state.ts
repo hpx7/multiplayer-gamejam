@@ -7,6 +7,7 @@ export type Player = {
   dir: Direction;
   name: string;
   role: "pirate" | "blackbeard"
+  suspended: boolean;
 };
 
 export enum Difficulty {

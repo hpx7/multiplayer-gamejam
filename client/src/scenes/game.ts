@@ -31,6 +31,7 @@ export class GameScene extends Phaser.Scene {
   private bbWarningColor = 0xff0000;
   private previousStatus: "enabled" | "disabled" | undefined;
   private playerTween: any;
+  private previousSuspendState: boolean = false;
 
   constructor() {
     super("game");
@@ -270,7 +271,42 @@ export class GameScene extends Phaser.Scene {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
-        this.updatePlayer(player);
+        if (!player.suspended) {
+          this.updatePlayer(player);
+        } else if (player.suspended && !this.previousSuspendState && player.id === this.user.id) {
+          console.log("here");
+          //ensure this happens on the transition
+          this.previousSuspendState = true;
+          //disables keybaord
+          this.gameStatus = "suspended";
+          //set's camera to BlackBeard
+          let bbValues;
+          if (this.bbID) {
+            bbValues = this.players.get(this.bbID);
+          }
+          if (bbValues) {
+            this.cameras.main.startFollow(bbValues.sprite, true);
+          }
+          //Display Game Over
+          //title
+          const { width, height } = this.scale;
+          const titleConfig: InputText.IConfig = {
+            text: "GAME OVER",
+            color: "red",
+            fontFamily: "futura",
+            fontSize: "96px",
+            readOnly: true,
+          };
+          const inputText = new InputText(
+            this,
+            width / 2 - 150,
+            3 * (height / 10),
+            600,
+            100,
+            titleConfig
+          ).setScrollFactor(0);
+          this.add.existing(inputText);
+        }
       }
     });
   }
@@ -282,37 +318,6 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.buffer.enqueue(msg.state, [], msg.ts);
       }
-    } else if (msg.type === ServerMessageType.SuspendPlayer) {
-      /*
-        This is what happens to a player if they are eliminated by Blackbeard
-        keyboard controls disabled, camera starts following Blackbeard
-        Game over screen shows up
-      */
-
-      //disables keybaord
-      this.gameStatus = "suspended";
-      //set's camera to BlackBeard
-      let bbValues;
-      if (this.bbID) {
-        bbValues = this.players.get(this.bbID);
-      }
-      if (bbValues) {
-        this.cameras.main.startFollow(bbValues.sprite, true);
-      }
-      //Display Game Over
-      //title
-      const { width, height } = this.scale;
-      const titleConfig: InputText.IConfig = {
-        text: "GAME OVER",
-        color: "red",
-        fontFamily: "futura",
-        fontSize: "96px",
-        readOnly: true,
-      };
-      const inputText = new InputText(this, width / 2 - 150, 3 * (height / 10), 600, 100, titleConfig).setScrollFactor(
-        0
-      );
-      this.add.existing(inputText);
     }
   }
 
@@ -468,6 +473,7 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     dir: to.dir,
     name: from.name,
     role: from.role,
+    suspended: from.suspended,
   };
 }
 
