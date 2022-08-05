@@ -225,10 +225,10 @@ export class GameScene extends Phaser.Scene {
   private addPlayer({ id, x, y, name, role }: Player) {
     let sprite;
     if (role === "blackbeard") {
-      sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard").setOrigin(0.5, 1);
+      sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard");
       name = "Black Beard";
     } else {
-      sprite = new Phaser.GameObjects.Sprite(this, x, y, "player").setOrigin(0.5, 1);
+      sprite = new Phaser.GameObjects.Sprite(this, x, y, "player");
     }
     const nameText = new Phaser.GameObjects.Text(this, x, y - sprite.height, name, {
       // eslint-disable-next-line quotes
@@ -236,7 +236,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: "24px",
       color: "black",
       fixedHeight: 28,
-    }).setOrigin(0.5, 1);
+    }).setOrigin(0.5, 0);
     this.add.existing(sprite);
     this.add.existing(nameText);
     this.players.set(id, { sprite, name: nameText });
