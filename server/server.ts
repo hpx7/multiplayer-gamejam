@@ -97,7 +97,7 @@ const coordinator = await register({
         const eliminatedPlayerIndex = findTargetIndex(roomId);
         if (eliminatedPlayerIndex != undefined) {
           const player = game.players[eliminatedPlayerIndex];
-          suspendPlayer(roomId, player!);
+          player.suspended = true;
           game.blackbeard.cooloff = BB_COOLOFF;
           game.blackbeard.state = BlackBeardKillState.Disabled;
         }
@@ -147,22 +147,6 @@ function startGame(roomId: RoomId) {
   });
 }
 
-function suspendPlayer(roomId: RoomId, player: AbstractServerPlayer) {
-  //if player, send message, if NPC, just remove from list
-  let myGame = states.get(roomId);
-  let playerIndex;
-  if (myGame) {
-    playerIndex = myGame.game.players.findIndex((p) => p.id == player.id);
-  }
-  if (player.playerType === "npc" && myGame && playerIndex) {
-    //remove it
-    myGame.game.players.splice(playerIndex, 1);
-  } else if (myGame && playerIndex) {
-    console.log("suspending: ", myGame.game.players[playerIndex]);
-    myGame.game.players[playerIndex].suspended = true;
-  }
-}
-
 function findTargetIndex(roomId: RoomId): number | undefined {
   console.log("Finding nearest target to Blackbeard");
 
@@ -205,6 +189,10 @@ setInterval(() => {
 
     // update players
     game.players.forEach((player) => {
+      if (player.suspended) {
+        return;
+      }
+
       // movement
       if (isNpc(player)) {
         player.applyNpcAlgorithm(game);
