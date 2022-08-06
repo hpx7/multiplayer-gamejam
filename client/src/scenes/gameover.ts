@@ -55,6 +55,7 @@ export class GameOver extends Phaser.Scene {
     //title
     const titleConfig: InputText.IConfig = {
       text: "GAME OVER",
+      align: "center",
       color: "black",
       fontFamily: "futura",
       fontSize: "32px",
