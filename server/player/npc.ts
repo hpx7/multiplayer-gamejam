@@ -1,7 +1,7 @@
 import { Direction } from "../../shared/messages.js";
 import { assertNever, getNextTile, getRandomElement, isBeachTile, ServerState } from "../utils.js";
 
-import AbstractServerPlayer from "./abstractServerPlayer.js";
+import AbstractServerPlayer, { PIRATE_SPEED } from "./abstractServerPlayer.js";
 
 export default class NPC extends AbstractServerPlayer {
   playerType: "npc" = "npc";
@@ -16,7 +16,7 @@ export default class NPC extends AbstractServerPlayer {
 
   // eslint-disable-next-line no-unused-vars
   public applyNpcAlgorithm(_state: ServerState) {
-    const nextTile = getNextTile(this.x, this.y, this.direction);
+    const nextTile = getNextTile(this.x, this.y, this.direction, PIRATE_SPEED);
     if (this.direction === Direction.None || !isBeachTile(nextTile) || Math.random() < 0.01) {
       this.direction = getRandomAdjacentDirection(this.direction);
     }

@@ -1,13 +1,13 @@
 import AbstractServerPlayer from "./abstractServerPlayer.js";
 
-export default class Rebel extends AbstractServerPlayer {
-  playerType: "rebel" = "rebel";
+export default class HumanPlayer extends AbstractServerPlayer {
+  playerType: "human" = "human";
 
   private constructor(id: string, x: number, y: number) {
     super(id, x, y);
   }
 
   public static create(id: string, startingTile: { x: number; y: number }) {
-    return new Rebel(id, startingTile.x, startingTile.y);
+    return new HumanPlayer(id, startingTile.x, startingTile.y);
   }
 }

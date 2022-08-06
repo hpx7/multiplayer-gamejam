@@ -1,10 +1,17 @@
 import { HathoraClient } from "@hathora/client-sdk";
 import { InterpolationBuffer } from "interpolation-buffer";
-import Phaser from "phaser";
+import Phaser, { GameObjects } from "phaser";
+import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 import mapUrl from "../../../shared/HAT_mainmap.json";
-import { ClientMessageType, Direction, ServerMessage, ServerMessageType } from "../../../shared/messages";
-import { Chest, Difficulty, GameState, Player } from "../../../shared/state";
+import {
+  ClientMessage,
+  ClientMessageType,
+  Direction,
+  ServerMessage,
+  ServerMessageType,
+} from "../../../shared/messages";
+import { BlackBeardKillState, Chest, Difficulty, GameState, Player } from "../../../shared/state";
 import { RoomConnection } from "../connection";
 
 export class GameScene extends Phaser.Scene {
@@ -17,6 +24,16 @@ export class GameScene extends Phaser.Scene {
   private chests: Map<string, { difficulty: Difficulty; reward: number; object: Phaser.GameObjects.Sprite }> =
     new Map();
 
+  private gameStatus: string | undefined = undefined;
+  private bbStatus: "enabled" | "disabled" | undefined;
+  private bbID: string | undefined;
+  private normalTintColor = 0xffffff;
+  private bbWarningColor = 0xff0000;
+  private previousStatus: "enabled" | "disabled" | undefined;
+  private playerTween: any;
+  private previousSuspendState: boolean = false;
+  private swordSound!: Phaser.Sound.BaseSound;
+
   constructor() {
     super("game");
   }
@@ -24,6 +41,7 @@ export class GameScene extends Phaser.Scene {
   init({ connection }: { connection: RoomConnection }) {
     this.connection = connection;
     this.user = HathoraClient.getUserFromToken(connection.token);
+    this.bbStatus = "disabled";
   }
 
   preload() {
@@ -33,6 +51,8 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet("blackbeard", "bb-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("game-music", "game_music.mp3");
     this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
+    this.load.image("dead", "jollyroger.png");
+    this.load.audio("sword", "sword.wav");
   }
 
   create() {
@@ -40,6 +60,8 @@ export class GameScene extends Phaser.Scene {
 
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
     music.play();
+
+    this.swordSound = this.sound.add("sword");
 
     this.events.on("shutdown", () => {
       music.stop();
@@ -152,28 +174,51 @@ export class GameScene extends Phaser.Scene {
     });
 
     const keys = this.input.keyboard.createCursorKeys();
-    let prevDirection = Direction.None;
-    const handleKeyEvt = () => {
-      let direction: Direction;
-      if (keys.up.isDown) {
-        direction = Direction.Up;
-      } else if (keys.down.isDown) {
-        direction = Direction.Down;
-      } else if (keys.right.isDown) {
-        direction = Direction.Right;
-      } else if (keys.left.isDown) {
-        direction = Direction.Left;
-      } else {
-        direction = Direction.None;
+
+    /**
+     * BlackBeards' Elimination Code
+     */
+    let tempKey = this.input.keyboard.addKey("SPACE"); // Get key object
+
+    tempKey.on("down", () => {
+      //this code only works if the player is BlackBeard
+      if (this.user.id != this.bbID) {
+        return;
+      }
+      //add gaurd condition for disabled
+      if (this.bbStatus == "disabled") {
+        return;
       }
 
-      if (prevDirection !== direction) {
-        prevDirection = direction;
-        const msg = { type: ClientMessageType.SetDirection, direction };
-        console.log("sending msg", msg);
-        this.connection.sendMessage(msg);
+      //Tell server to eliminate player
+      const msg: ClientMessage = { type: ClientMessageType.EliminatePlayer };
+      this.connection.sendMessage(msg);
+    });
+
+    let prevDirection = Direction.None;
+    const handleKeyEvt = () => {
+      if (!this.gameStatus) {
+        let direction: Direction;
+        if (keys.up.isDown) {
+          direction = Direction.Up;
+        } else if (keys.down.isDown) {
+          direction = Direction.Down;
+        } else if (keys.right.isDown) {
+          direction = Direction.Right;
+        } else if (keys.left.isDown) {
+          direction = Direction.Left;
+        } else {
+          direction = Direction.None;
+        }
+
+        if (prevDirection !== direction) {
+          prevDirection = direction;
+          const msg: ClientMessage = { type: ClientMessageType.SetDirection, direction };
+          this.connection.sendMessage(msg);
+        }
       }
     };
+
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
   }
@@ -197,11 +242,50 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
+    if (state.blackbeard.state == BlackBeardKillState.Enabled) {
+      this.bbStatus = "enabled";
+    } else {
+      this.bbStatus = "disabled";
+    }
+
     state.players.forEach((player) => {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
         this.updatePlayer(player);
+        if (player.suspended && !this.previousSuspendState && player.id === this.user.id) {
+          //ensure this happens on the transition
+          this.previousSuspendState = true;
+          //disables keybaord
+          this.gameStatus = "suspended";
+          //set's camera to BlackBeard
+          let bbValues;
+          if (this.bbID) {
+            bbValues = this.players.get(this.bbID);
+          }
+          if (bbValues) {
+            this.cameras.main.startFollow(bbValues.sprite, true);
+          }
+          //Display Game Over
+          //title
+          const { width, height } = this.scale;
+          const titleConfig: InputText.IConfig = {
+            text: "GAME OVER",
+            color: "red",
+            fontFamily: "futura",
+            fontSize: "96px",
+            readOnly: true,
+          };
+          const inputText = new InputText(
+            this,
+            width / 2 - 150,
+            3 * (height / 10),
+            600,
+            100,
+            titleConfig
+          ).setScrollFactor(0);
+          this.add.existing(inputText);
+        }
       }
     });
   }
@@ -213,6 +297,8 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.buffer.enqueue(msg.state, [], msg.ts);
       }
+    } else if (msg.type === ServerMessageType.PlayerEliminated) {
+      this.swordSound.play();
     }
   }
 
@@ -223,13 +309,32 @@ export class GameScene extends Phaser.Scene {
   }
 
   private addPlayer({ id, x, y, name, role }: Player) {
-    let sprite;
+    let sprite: GameObjects.Sprite;
     if (role === "blackbeard") {
       sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard");
       name = "Black Beard";
+      this.bbID = id;
     } else {
       sprite = new Phaser.GameObjects.Sprite(this, x, y, "player");
     }
+    sprite.setTint(this.normalTintColor);
+    const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
+
+    this.playerTween = this.tweens.addCounter({
+      from: 0,
+      to: 100,
+      duration: 750,
+      ease: Phaser.Math.Easing.Sine.InOut,
+      repeat: -1,
+      yoyo: true,
+      onUpdate: (tween) => {
+        const value = tween.getValue();
+        const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(normalColor, normalColor, 100, value);
+        const myColor = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.g);
+        sprite.setTint(myColor);
+      },
+    });
+
     const nameText = new Phaser.GameObjects.Text(this, x, y - sprite.height, name, {
       // eslint-disable-next-line quotes
       fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
@@ -245,8 +350,11 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private updatePlayer({ id, x, y, dir, role }: Player) {
+  private updatePlayer({ id, x, y, dir, role, suspended }: Player) {
     const { sprite, name } = this.players.get(id)!;
+    if (suspended) {
+      sprite.setTexture("dead");
+    }
     if (dir === Direction.Left) {
       if (role === "blackbeard") {
         sprite.anims.play("bbwalkleft", true);
@@ -282,6 +390,44 @@ export class GameScene extends Phaser.Scene {
     sprite.y = y;
     name.x = x;
     name.y = y - sprite.height;
+
+    //tweening colors
+    if (this.bbStatus == "enabled" && role == "blackbeard" && this.previousStatus != this.bbStatus) {
+      this.previousStatus = this.bbStatus;
+      const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
+      const newColor = Phaser.Display.Color.ValueToColor(this.bbWarningColor);
+      this.playerTween = this.tweens.addCounter({
+        from: 0,
+        to: 100,
+        duration: 750,
+        ease: Phaser.Math.Easing.Sine.InOut,
+        repeat: -1,
+        yoyo: true,
+        onUpdate: (tween) => {
+          const value = tween.getValue();
+          const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(normalColor, newColor, 100, value);
+          const myColor = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.g);
+          sprite.setTint(myColor);
+        },
+      });
+    } else if (this.bbStatus == "disabled" && role == "blackbeard" && this.previousStatus != this.bbStatus) {
+      this.previousStatus = this.bbStatus;
+      const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
+      this.playerTween = this.tweens.addCounter({
+        from: 0,
+        to: 100,
+        duration: 750,
+        ease: Phaser.Math.Easing.Sine.InOut,
+        repeat: -1,
+        yoyo: true,
+        onUpdate: (tween) => {
+          const value = tween.getValue();
+          const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(normalColor, normalColor, 100, value);
+          const myColor = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.g);
+          sprite.setTint(myColor);
+        },
+      });
+    }
   }
 }
 
@@ -292,16 +438,19 @@ function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
       return fromPlayer !== undefined ? lerpPlayer(fromPlayer, toPlayer, pctElapsed) : toPlayer;
     }),
     chests: to.chests,
+    blackbeard: to.blackbeard,
+    winner: to.winner,
   };
 }
 
 function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
   return {
-    id: from.id,
+    id: to.id,
     x: from.x + (to.x - from.x) * pctElapsed,
     y: from.y + (to.y - from.y) * pctElapsed,
     dir: to.dir,
-    name: from.name,
-    role: from.role,
+    name: to.name,
+    role: to.role,
+    suspended: to.suspended,
   };
 }
