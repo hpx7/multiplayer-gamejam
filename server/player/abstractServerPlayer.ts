@@ -3,8 +3,8 @@ import { assertNever, getNextTile, isBeachTile } from "../utils.js";
 
 import { generatePirateName } from "./nameGenerator.js";
 
-const PIRATE_SPEED = 15;
-const BLACKBEARD_SPEED = 20;
+export const PIRATE_SPEED = 15;
+export const BLACKBEARD_SPEED = 20;
 
 export default abstract class AbstractServerPlayer {
   id: string;
@@ -30,7 +30,7 @@ export default abstract class AbstractServerPlayer {
 
   public update() {
     const speed = this.role === "pirate" ? PIRATE_SPEED : BLACKBEARD_SPEED;
-    const nextTile = getNextTile(this.x, this.y, this.direction);
+    const nextTile = getNextTile(this.x, this.y, this.direction, speed);
     if (isBeachTile(nextTile)) {
       switch (this.direction) {
         case Direction.Up:
