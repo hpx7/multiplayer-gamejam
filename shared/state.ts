@@ -37,4 +37,5 @@ export type GameState = {
     cooloff: number;
     state: BlackBeardKillState;
   };
+  winner: "pirate" | "blackbeard" | undefined;
 };

@@ -10,9 +10,8 @@ export type ServerState = {
     cooloff: number;
     state: BlackBeardKillState;
   };
+  winner: "pirate" | "blackbeard" | undefined;
 };
-
-export const PLAYER_SPEED = 15;
 
 export const isBeachTile = (tile: { x: number; y: number }): boolean => {
   // lookup which array index of tile is map data referring too

@@ -431,17 +431,18 @@ function lerp(from: GameState, to: GameState, pctElapsed: number): GameState {
     }),
     chests: to.chests,
     blackbeard: to.blackbeard,
+    winner: to.winner,
   };
 }
 
 function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
   return {
-    id: from.id,
+    id: to.id,
     x: from.x + (to.x - from.x) * pctElapsed,
     y: from.y + (to.y - from.y) * pctElapsed,
     dir: to.dir,
-    name: from.name,
-    role: from.role,
-    suspended: from.suspended,
+    name: to.name,
+    role: to.role,
+    suspended: to.suspended,
   };
 }

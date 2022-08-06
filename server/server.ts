@@ -8,7 +8,7 @@ import { BlackBeardKillState, Chest, GameState } from "../shared/state.js";
 import AbstractServerPlayer from "./player/abstractServerPlayer.js";
 import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
-import Rebel from "./player/realPlayer.js";
+import HumanPlayer from "./player/realPlayer.js";
 import { getClosestTarget, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
 
 type RoomId = bigint;
@@ -43,6 +43,7 @@ const coordinator = await register({
           players: [],
           chests,
           blackbeard: { cooloff: BB_COOLOFF, state: BlackBeardKillState.Idle },
+          winner: undefined,
         },
       });
     },
@@ -51,7 +52,7 @@ const coordinator = await register({
       const { subscribers, game } = states.get(roomId)!;
       subscribers.add(userId);
       if (!game.players.some((player) => player.id === userId)) {
-        game.players.push(Rebel.create(userId, getRandomBeachPixel()));
+        game.players.push(HumanPlayer.create(userId, getRandomBeachPixel()));
       }
     },
     unsubscribeUser(roomId, userId) {
@@ -123,6 +124,7 @@ function broadcastUpdates(roomId: RoomId) {
       cooloff: game.blackbeard.cooloff,
       state: game.blackbeard.state,
     },
+    winner: game.winner,
   };
   subscribers.forEach((userId) => {
     const msg: ServerMessage = {
@@ -189,6 +191,11 @@ function findTargetIndex(roomId: RoomId): number | undefined {
 
 setInterval(() => {
   states.forEach(({ game }, roomId) => {
+    if (game.winner !== undefined) {
+      return;
+    }
+
+    // update blackbeard cooldown
     if (game.blackbeard.state == BlackBeardKillState.Disabled) {
       game.blackbeard.cooloff -= 50;
       if (game.blackbeard.cooloff <= 0) {
@@ -196,7 +203,9 @@ setInterval(() => {
       }
     }
 
+    // update players
     game.players.forEach((player) => {
+      // movement
       if (isNpc(player)) {
         player.applyNpcAlgorithm(game);
       }
@@ -210,11 +219,25 @@ setInterval(() => {
           player.coins++;
         }
       }
+
+      // check for game over
+      if (player.playerType === "human") {
+        if (player.role === "pirate" && player.coins >= 25) {
+          game.winner = "pirate";
+          return;
+        } else if (player.role === "blackbeard" && player.coins >= 50) {
+          game.winner = "blackbeard";
+          return;
+        }
+      }
     });
+
     // spawn chests
     while (game.chests.length < NUM_CHESTS) {
       game.chests.push(getRandomChest());
     }
+
+    // send updates
     broadcastUpdates(roomId);
   });
 }, 50);
