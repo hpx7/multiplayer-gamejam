@@ -2,22 +2,33 @@ import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
 export class GameOver extends Phaser.Scene {
-  winningteam: string = "";
+  winningteam: any;
   constructor() {
     super("gameover");
   }
 
   init(winner: string) {
     this.winningteam = winner;
+    console.log(this.winningteam);
+    console.log("init gameover");
   }
 
-  preload() {}
+  preload() {
+    this.load.audio("g_over", "Game Over.wav");
+  }
 
   create() {
     /**
      * Setting up game over UI
      */
+    const music = this.sound.add("g_over", { loop: true, volume: 0.25 });
+    music.play();
 
+    this.events.on("shutdown", () => {
+      music.stop();
+    });
+
+    console.log("setting up UI");
     //Restart Game Button
     const { width, height } = this.scale;
     const createButton = this.add
@@ -34,6 +45,10 @@ export class GameOver extends Phaser.Scene {
       .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
       .on("pointerdown", async () => {
         console.log("Sending back to title screen");
+        const savedRoomId = sessionStorage.getItem("roomId");
+        if (savedRoomId) {
+          sessionStorage.removeItem("roomId");
+        }
         this.scene.start("title");
       });
 
@@ -65,7 +80,7 @@ export class GameOver extends Phaser.Scene {
         bottom: 5,
       },
 
-      text: `The winning team was: ${this.winningteam}`,
+      text: `The winning team was: ${this.winningteam.winner}`,
       style: {
         fontSize: "22px",
         fontFamily: "fortuna",
