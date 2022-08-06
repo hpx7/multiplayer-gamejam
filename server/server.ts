@@ -120,6 +120,7 @@ function broadcastUpdates(roomId: RoomId) {
       name: player.name,
       role: player.role,
       suspended: player.suspended,
+      coins: player.coins,
     })),
     chests: game.chests,
     blackbeard: {

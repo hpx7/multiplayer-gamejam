@@ -33,6 +33,10 @@ export class GameScene extends Phaser.Scene {
   private playerTween: any;
   private previousSuspendState: boolean = false;
   private swordSound!: Phaser.Sound.BaseSound;
+  private chestSound!: Phaser.Sound.BaseSound;
+  private numCoins: number = 0;
+  private targetNumCoins: number = 25;
+  private cointext: InputText | undefined;
 
   constructor() {
     super("game");
@@ -53,6 +57,7 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
     this.load.image("dead", "jollyroger.png");
     this.load.audio("sword", "sword.wav");
+    this.load.audio("chestsound", "coin-drop.mp3");
   }
 
   create() {
@@ -62,6 +67,7 @@ export class GameScene extends Phaser.Scene {
     music.play();
 
     this.swordSound = this.sound.add("sword");
+    this.chestSound = this.sound.add("chestsound");
 
     this.events.on("shutdown", () => {
       music.stop();
@@ -221,6 +227,17 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
+
+    //title
+    const titleConfig: InputText.IConfig = {
+      text: `COINS: ${this.numCoins}/${this.targetNumCoins}`,
+      color: "black",
+      fontFamily: "futura",
+      fontSize: "30px",
+      readOnly: true,
+    };
+    this.cointext = new InputText(this, 900, -270, 500, 20, titleConfig).setScrollFactor(0);
+    this.add.existing(this.cointext);
   }
 
   update(): void {
@@ -239,6 +256,7 @@ export class GameScene extends Phaser.Scene {
       if (!state.chests.some((c) => c.id === chestId)) {
         chest.object.destroy();
         this.chests.delete(chestId);
+        this.chestSound.play();
       }
     });
 
@@ -313,9 +331,18 @@ export class GameScene extends Phaser.Scene {
     if (role === "blackbeard") {
       sprite = new Phaser.GameObjects.Sprite(this, x, y, "blackbeard");
       name = "Black Beard";
+      if (id === this.user.id) {
+        this.targetNumCoins = 50;
+        this.numCoins = 0;
+      }
+
       this.bbID = id;
     } else {
       sprite = new Phaser.GameObjects.Sprite(this, x, y, "player");
+      if (id === this.user.id) {
+        this.targetNumCoins = 25;
+        this.numCoins = 0;
+      }
     }
     sprite.setTint(this.normalTintColor);
     const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
@@ -350,7 +377,8 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private updatePlayer({ id, x, y, dir, role, suspended }: Player) {
+  private updatePlayer({ id, x, y, dir, role, suspended, coins }: Player) {
+    console.log("coins: ", coins);
     const { sprite, name } = this.players.get(id)!;
     if (suspended) {
       sprite.setTexture("dead");
@@ -386,6 +414,20 @@ export class GameScene extends Phaser.Scene {
         sprite.anims.play("idle", true);
       }
     }
+
+    if (this.user.id == id) {
+      console.log(coins);
+      if (coins == undefined) {
+        this.numCoins = 0;
+      } else {
+        this.numCoins = coins;
+      }
+
+      if (this.cointext) {
+        this.cointext.text = `COINS: ${this.numCoins}/${this.targetNumCoins}`;
+      }
+    }
+
     sprite.x = x;
     sprite.y = y;
     name.x = x;
@@ -452,5 +494,6 @@ function lerpPlayer(from: Player, to: Player, pctElapsed: number): Player {
     name: to.name,
     role: to.role,
     suspended: to.suspended,
+    coins: to.coins,
   };
 }
