@@ -11,6 +11,7 @@ export default abstract class AbstractServerPlayer {
   direction: Direction;
   suspended: boolean;
   role: "pirate" | "blackbeard";
+  coins: number;
   abstract playerType: "npc" | "rebel";
 
   protected constructor(id: string, x: number, y: number) {
@@ -21,6 +22,7 @@ export default abstract class AbstractServerPlayer {
     this.name = generatePirateName();
     this.role = "pirate";
     this.suspended = false;
+    this.coins = 0;
   }
 
   public update() {

@@ -207,6 +207,7 @@ setInterval(() => {
         const chest = game.chests[i];
         if (dist(player.x, player.y, chest.x, chest.y) < 30) {
           game.chests.splice(i, 1);
+          player.coins++;
         }
       }
     });
