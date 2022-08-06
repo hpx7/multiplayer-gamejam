@@ -50,6 +50,7 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet("blackbeard", "bb-Sheet.png", { frameWidth: 34, frameHeight: 45 });
     this.load.audio("game-music", "game_music.mp3");
     this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
+    this.load.image("dead", "jollyroger.png");
   }
 
   create() {
@@ -247,9 +248,8 @@ export class GameScene extends Phaser.Scene {
       if (!this.players.has(player.id)) {
         this.addPlayer(player);
       } else {
-        if (!player.suspended) {
-          this.updatePlayer(player);
-        } else if (player.suspended && !this.previousSuspendState && player.id === this.user.id) {
+        this.updatePlayer(player);
+        if (player.suspended && !this.previousSuspendState && player.id === this.user.id) {
           //ensure this happens on the transition
           this.previousSuspendState = true;
           //disables keybaord
@@ -344,8 +344,11 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private updatePlayer({ id, x, y, dir, role }: Player) {
+  private updatePlayer({ id, x, y, dir, role, suspended }: Player) {
     const { sprite, name } = this.players.get(id)!;
+    if (suspended) {
+      sprite.setTexture("dead");
+    }
     if (dir === Direction.Left) {
       if (role === "blackbeard") {
         sprite.anims.play("bbwalkleft", true);
@@ -404,7 +407,6 @@ export class GameScene extends Phaser.Scene {
     } else if (this.bbStatus == "disabled" && role == "blackbeard" && this.previousStatus != this.bbStatus) {
       this.previousStatus = this.bbStatus;
       const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
-
       this.playerTween = this.tweens.addCounter({
         from: 0,
         to: 100,
