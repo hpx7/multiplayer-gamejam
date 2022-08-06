@@ -32,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   private previousStatus: "enabled" | "disabled" | undefined;
   private playerTween: any;
   private previousSuspendState: boolean = false;
+  private swordSound!: Phaser.Sound.BaseSound;
 
   constructor() {
     super("game");
@@ -51,6 +52,7 @@ export class GameScene extends Phaser.Scene {
     this.load.audio("game-music", "game_music.mp3");
     this.load.spritesheet("chest", "chest_sheet.png", { frameWidth: 64, frameHeight: 64 });
     this.load.image("dead", "jollyroger.png");
+    this.load.audio("sword", "sword.wav");
   }
 
   create() {
@@ -58,6 +60,8 @@ export class GameScene extends Phaser.Scene {
 
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
     music.play();
+
+    this.swordSound = this.sound.add("sword");
 
     this.events.on("shutdown", () => {
       music.stop();
@@ -293,6 +297,8 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.buffer.enqueue(msg.state, [], msg.ts);
       }
+    } else if (msg.type === ServerMessageType.PlayerEliminated) {
+      this.swordSound.play();
     }
   }
 

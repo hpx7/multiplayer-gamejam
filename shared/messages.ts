@@ -9,6 +9,7 @@ export enum ClientMessageType {
 export enum ServerMessageType {
   StateUpdate,
   SrvStartGame,
+  PlayerEliminated,
 }
 
 export enum Direction {
@@ -34,7 +35,7 @@ export type EliminatePlayerMessage = {
   type: ClientMessageType.EliminatePlayer;
 };
 
-export type ServerMessage = StateUpdateMessage | SrvStartGameMessage;
+export type ServerMessage = StateUpdateMessage | SrvStartGameMessage | PlayerEliminatedMessage;
 
 export type StateUpdateMessage = {
   type: ServerMessageType.StateUpdate;
@@ -44,4 +45,8 @@ export type StateUpdateMessage = {
 
 export type SrvStartGameMessage = {
   type: ServerMessageType.SrvStartGame;
+};
+
+export type PlayerEliminatedMessage = {
+  type: ServerMessageType.PlayerEliminated;
 };

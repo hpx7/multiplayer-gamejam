@@ -95,11 +95,13 @@ const coordinator = await register({
         //const player = game.players.find((p) => p.id === message.player);
         console.log("Received Elim Message: ");
         const eliminatedPlayerIndex = findTargetIndex(roomId);
-        if (eliminatedPlayerIndex != undefined) {
+        if (eliminatedPlayerIndex !== undefined) {
           const player = game.players[eliminatedPlayerIndex];
           player.suspended = true;
           game.blackbeard.cooloff = BB_COOLOFF;
           game.blackbeard.state = BlackBeardKillState.Disabled;
+          const msg: ServerMessage = { type: ServerMessageType.PlayerEliminated };
+          coordinator.stateUpdate(roomId, userId, Buffer.from(JSON.stringify(msg), "utf8"));
         }
       }
     },
