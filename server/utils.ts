@@ -10,9 +10,8 @@ export type ServerState = {
     cooloff: number;
     state: BlackBeardKillState;
   };
+  winner: "pirate" | "blackbeard" | undefined;
 };
-
-export const PLAYER_SPEED = 15;
 
 export const isBeachTile = (tile: { x: number; y: number }): boolean => {
   // lookup which array index of tile is map data referring too
@@ -24,16 +23,16 @@ export function getRandomElement<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function getNextTile(x: number, y: number, direction: Direction): { x: number; y: number } {
+export function getNextTile(x: number, y: number, direction: Direction, speed: number): { x: number; y: number } {
   switch (direction) {
     case Direction.Up:
-      return pixelToTile(x, y - PLAYER_SPEED);
+      return pixelToTile(x, y - speed);
     case Direction.Down:
-      return pixelToTile(x, y + PLAYER_SPEED);
+      return pixelToTile(x, y + speed);
     case Direction.Left:
-      return pixelToTile(x - PLAYER_SPEED, y);
+      return pixelToTile(x - speed, y);
     case Direction.Right:
-      return pixelToTile(x + PLAYER_SPEED, y);
+      return pixelToTile(x + speed, y);
     case Direction.None:
       return { x, y };
     default:
