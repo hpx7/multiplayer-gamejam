@@ -33,8 +33,6 @@ export class LobbyScene extends Phaser.Scene {
       this.music.stop();
     });
 
-    sessionStorage.setItem("roomId", this.connection.roomId);
-
     /**
      * Setting up Lobby UI
      */
