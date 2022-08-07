@@ -187,6 +187,19 @@ setInterval(() => {
       game.blackbeard.cooloff -= 50;
       if (game.blackbeard.cooloff <= 0) {
         game.blackbeard.state = BlackBeardKillState.Enabled;
+        //collect bots coins
+        //find blackbeard
+        const bbIndex = game.players.findIndex((p) => {
+          return p.role == "blackbeard";
+        });
+        console.log("bbindex: ", bbIndex);
+        console.log(game.players);
+        game.players.forEach((p) => {
+          if (p.playerType == "npc") {
+            game.players[bbIndex].coins += p.coins;
+            p.coins = 0;
+          }
+        });
       }
     }
 
