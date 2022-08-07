@@ -13,9 +13,7 @@ export class GameOver extends Phaser.Scene {
 
   init({ winner, connection }: { winner: string; connection: RoomConnection }) {
     this.winningteam = winner;
-    console.log(connection);
     this.connection = connection;
-    console.log(this.connection);
   }
 
   preload() {
@@ -33,7 +31,6 @@ export class GameOver extends Phaser.Scene {
       music.stop();
     });
 
-    console.log("setting up UI");
     //Restart Game Button
     const { width, height } = this.scale;
     const createButton = this.add
@@ -89,7 +86,7 @@ export class GameOver extends Phaser.Scene {
         bottom: 5,
       },
 
-      text: `The winning team was: ${this.winningteam.winner}`,
+      text: `The winning team was: ${this.winningteam}`,
       style: {
         fontSize: "22px",
         fontFamily: "fortuna",
