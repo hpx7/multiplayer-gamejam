@@ -17,6 +17,7 @@ export class LobbyScene extends Phaser.Scene {
   init({ connection, music }: { connection: RoomConnection; music: Phaser.Sound.BaseSound }) {
     this.connection = connection;
     this.music = music;
+    this.isAddingPlayers = true;
   }
 
   preload() {
@@ -82,6 +83,7 @@ export class LobbyScene extends Phaser.Scene {
         //go back to title screen
         this.scene.start("title");
         sessionStorage.removeItem("roomId");
+        sessionStorage.removeItem("token");
       });
 
     //help button
