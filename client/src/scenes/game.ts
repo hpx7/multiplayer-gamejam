@@ -230,6 +230,10 @@ export class GameScene extends Phaser.Scene {
 
     const { state } = this.buffer.getInterpolatedState(Date.now());
 
+    if (state.winner) {
+      this.scene.start("gameover", { winner: state.winner });
+    }
+
     state.chests.forEach((c) => {
       if (!this.chests.has(c.id)) {
         this.addChest(c);
