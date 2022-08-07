@@ -81,6 +81,7 @@ export class LobbyScene extends Phaser.Scene {
         this.connection.disconnect();
         //go back to title screen
         this.scene.start("title");
+        sessionStorage.removeItem("roomId");
       });
 
     //help button
@@ -92,12 +93,12 @@ export class LobbyScene extends Phaser.Scene {
       .on("pointerover", () => {
         let helpDiv = document.createElement("div");
         helpDiv.innerHTML =
-          "<-- For player movement, use arrow keys -->    <-- For Chest mini-game: use Z and X keys to move wrench, Enter to attempt to open -->    <-- Hit SpaceBar to open chests -->";
+          "<p>For player movement, use arrow keys</p><p>Collect Chests</p> <p>For Blackbeard:</p> <p>Hit SpaceBar to eliminate players when armed</p><p>Your BOT pirates will turn in their gold periodically</p>";
         helpElement = this.add.dom(
           width / 2,
           height / 2,
           helpDiv,
-          "font-size: xx-large; text-align: center; color: white; width: 600px; height: 300px; border: 1px solid white; background-color: black"
+          "font-size: x-large; text-align: center; color: white; width: 600px; height: 300px; border: 1px solid white; background-color: black"
         );
       })
       .on("pointerout", () => {

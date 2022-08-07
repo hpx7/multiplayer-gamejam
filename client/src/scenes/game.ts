@@ -258,7 +258,8 @@ export class GameScene extends Phaser.Scene {
     const { state } = this.buffer.getInterpolatedState(Date.now());
 
     if (state.winner) {
-      this.scene.start("gameover", { winner: state.winner });
+      console.log("game.ts, this.connection: ", this.connection);
+      this.scene.start("gameover", { winner: state.winner, connection: this.connection });
     }
 
     state.chests.forEach((c) => {

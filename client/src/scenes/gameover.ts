@@ -1,16 +1,21 @@
 import Phaser from "phaser";
 import InputText from "phaser3-rex-plugins/plugins/inputtext";
 
+import { RoomConnection } from "../connection";
+
 export class GameOver extends Phaser.Scene {
   winningteam: any;
+  connection!: RoomConnection;
+
   constructor() {
     super("gameover");
   }
 
-  init(winner: string) {
+  init({ winner, connection }: { winner: string; connection: RoomConnection }) {
     this.winningteam = winner;
-    console.log(this.winningteam);
-    console.log("init gameover");
+    console.log(connection);
+    this.connection = connection;
+    console.log(this.connection);
   }
 
   preload() {
@@ -44,11 +49,14 @@ export class GameOver extends Phaser.Scene {
       .on("pointerover", () => createButton.setStyle({ fill: "#f39c12" }))
       .on("pointerout", () => createButton.setStyle({ fill: "#FFF" }))
       .on("pointerdown", async () => {
-        console.log("Sending back to title screen");
+        if (this.connection) {
+          this.connection.disconnect();
+        }
         const savedRoomId = sessionStorage.getItem("roomId");
         if (savedRoomId) {
           sessionStorage.removeItem("roomId");
         }
+
         this.scene.start("title");
       });
 
