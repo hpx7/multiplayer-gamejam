@@ -378,7 +378,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updatePlayer({ id, x, y, dir, role, suspended, coins }: Player) {
-    console.log("coins: ", coins);
     const { sprite, name } = this.players.get(id)!;
     if (suspended) {
       sprite.setTexture("dead");
@@ -416,7 +415,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (this.user.id == id) {
-      console.log(coins);
       if (coins == undefined) {
         this.numCoins = 0;
       } else {
