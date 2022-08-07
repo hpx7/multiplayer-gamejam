@@ -33,6 +33,8 @@ export class GameScene extends Phaser.Scene {
   private playerTween: any;
   private previousSuspendState: boolean = false;
   private swordSound!: Phaser.Sound.BaseSound;
+  private BBIndicator: Phaser.GameObjects.Rectangle | undefined;
+  private BBIndText: Phaser.GameObjects.Text | undefined;
 
   constructor() {
     super("game");
@@ -221,6 +223,14 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
+
+    this.BBIndicator = this.add.rectangle(-325, -275, 225, 50, 0x00ff00);
+    this.BBIndicator.setScrollFactor(0, 0);
+    this.BBIndText = this.add.text(-355, -295, "SAFE", {
+      color: "#000000",
+      fontSize: "32px",
+    });
+    this.BBIndText.setScrollFactor(0, 0);
   }
 
   update(): void {
@@ -244,8 +254,24 @@ export class GameScene extends Phaser.Scene {
 
     if (state.blackbeard.state == BlackBeardKillState.Enabled) {
       this.bbStatus = "enabled";
+      if (this.BBIndicator) {
+        this.BBIndicator.fillColor = 0xff0000;
+        if (this.BBIndText) {
+          this.BBIndText.text = "DANGER";
+          this.BBIndText.setFontSize(32);
+          this.BBIndText.setColor("#ffffff");
+        }
+      }
     } else {
       this.bbStatus = "disabled";
+      if (this.BBIndicator) {
+        this.BBIndicator.fillColor = 0x00ff00;
+      }
+      if (this.BBIndText) {
+        this.BBIndText.text = "SAFE";
+        this.BBIndText.setFontSize(32);
+        this.BBIndText.setColor("#000000");
+      }
     }
 
     state.players.forEach((player) => {
