@@ -11,18 +11,10 @@ export type Player = {
   coins: number;
 };
 
-export enum Difficulty {
-  low,
-  med,
-  hard,
-}
-
 export type Chest = {
   id: string;
   x: number;
   y: number;
-  difficulty: Difficulty;
-  reward: number;
 };
 
 export enum BlackBeardKillState {
