@@ -37,6 +37,7 @@ export class GameScene extends Phaser.Scene {
   private numCoins: number = 0;
   private targetNumCoins: number = 25;
   private cointext: InputText | undefined;
+  private roletext: InputText | undefined;
   private BBIndicator: Phaser.GameObjects.Rectangle | undefined;
   private BBIndText: Phaser.GameObjects.Text | undefined;
 
@@ -230,8 +231,8 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown", handleKeyEvt);
     this.input.keyboard.on("keyup", handleKeyEvt);
 
-    //title
-    const titleConfig: InputText.IConfig = {
+    //coins
+    let titleConfig: InputText.IConfig = {
       text: `COINS: ${this.numCoins}/${this.targetNumCoins}`,
       color: "black",
       fontFamily: "futura",
@@ -241,6 +242,19 @@ export class GameScene extends Phaser.Scene {
     this.cointext = new InputText(this, 900, -270, 500, 20, titleConfig).setScrollFactor(0);
     this.add.existing(this.cointext);
 
+    //role UI
+    //coins
+    titleConfig = {
+      text: "ROLE: ",
+      color: "black",
+      fontFamily: "futura",
+      fontSize: "30px",
+      readOnly: true,
+    };
+    this.roletext = new InputText(this, 225, -270, 500, 20, titleConfig).setScrollFactor(0);
+    this.add.existing(this.roletext);
+
+    //indicator UI
     this.BBIndicator = this.add.rectangle(-325, -275, 225, 50, 0x00ff00);
     this.BBIndicator.setScrollFactor(0, 0);
     this.BBIndText = this.add.text(-355, -295, "SAFE", {
@@ -377,6 +391,12 @@ export class GameScene extends Phaser.Scene {
     }
     sprite.setTint(this.normalTintColor);
     const normalColor = Phaser.Display.Color.ValueToColor(this.normalTintColor);
+
+    if (id == this.user.id) {
+      if (this.roletext) {
+        this.roletext.text = `ROLE: ${role}`.toUpperCase();
+      }
+    }
 
     this.playerTween = this.tweens.addCounter({
       from: 0,
