@@ -116,7 +116,7 @@ export class LobbyScene extends Phaser.Scene {
         bottom: 50,
       },
 
-      text: "BlackBeard the pirate has found a series of islands with legendary treasure scattered about, and he recruits a crew to collect it.  However, he starts to suspect that not all of his crew are loyal to him.  It is up to BlackBeard himself to learn who he can and cannot trust.  He must discover the imposter pirates before they steal too much treasure for themselves!",
+      text: "BlackBeard the pirate has found a series of islands with legendary treasure scattered about, and he recruits a crew to collect it.  However, he starts to suspect that not all of his crew are loyal to him.  It is up to BlackBeard himself to learn who he can and cannot trust.\n\nBlackBeard must discover the imposter pirates before they steal too much treasure for themselves!",
       style: {
         fontSize: "22px",
         fontFamily: "fortuna",
