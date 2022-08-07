@@ -116,7 +116,7 @@ export class LobbyScene extends Phaser.Scene {
         bottom: 50,
       },
 
-      text: "Welcome to Honor Amongst Thieves -- In this game, BlackBeard the Pirate has found a series of islands with treasure scattered about.  BlackBeard starts to suspect that not all of his crew are loyal to him.  It is up to BlackBeard himself to learn who he can and cannot trust.  There are imposter Pirates on the crew who are looking out for their own rival crew.  They are looking to not lose BlackBeards trust, while keeping some of the gold for themselves.",
+      text: "BlackBeard the pirate has found a series of islands with legendary treasure scattered about, and he recruits a crew to collect it.  However, he starts to suspect that not all of his crew are loyal to him.  It is up to BlackBeard himself to learn who he can and cannot trust.  He must discover the imposter pirates before they steal too much treasure for themselves!",
       style: {
         fontSize: "22px",
         fontFamily: "fortuna",
