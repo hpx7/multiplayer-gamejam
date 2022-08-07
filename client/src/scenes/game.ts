@@ -244,7 +244,7 @@ export class GameScene extends Phaser.Scene {
 
     //role UI
     //coins
-    InputText.IConfig = {
+    titleConfig = {
       text: "ROLE: ",
       color: "black",
       fontFamily: "futura",
