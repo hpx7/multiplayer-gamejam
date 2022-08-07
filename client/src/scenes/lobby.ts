@@ -62,14 +62,14 @@ export class LobbyScene extends Phaser.Scene {
 
     //title
     const titleConfig: InputText.IConfig = {
-      text: `LOBBY -  ROOM: ${this.connection.roomId}`,
+      text: `LOBBY -  ROOM CODE: ${this.connection.roomId}`,
       color: "black",
       fontFamily: "futura",
       fontSize: "32px",
       readOnly: true,
       backgroundColor: "#dddddd",
     };
-    const inputText = new InputText(this, width / 2, 30, 500, 50, titleConfig).setScrollFactor(0);
+    const inputText = new InputText(this, width / 2, 30, 600, 50, titleConfig).setScrollFactor(0);
     this.add.existing(inputText);
 
     //back button
@@ -168,7 +168,7 @@ export class LobbyScene extends Phaser.Scene {
       if (this.isAddingPlayers) {
         let lobbyString = "";
         msg.state.players.forEach((player, index) => {
-          lobbyString = lobbyString + `(Player: ${index}, ID: ${player.id})  `;
+          lobbyString = lobbyString + `(Player: ${index}, Name: ${player.name})  `;
         });
         this.lobbyText.text = lobbyString;
       }
