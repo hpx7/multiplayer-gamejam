@@ -66,6 +66,8 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.connection.addListener((msg) => this.handleMessage(msg));
 
+    sessionStorage.setItem("roomId", this.connection.roomId);
+
     const music = this.sound.add("game-music", { loop: true, volume: 0.25 });
     music.play();
 
