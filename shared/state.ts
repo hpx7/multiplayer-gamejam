@@ -8,6 +8,7 @@ export type Player = {
   name: string;
   role: "pirate" | "blackbeard";
   suspended: boolean;
+  coins: number;
 };
 
 export enum Difficulty {
