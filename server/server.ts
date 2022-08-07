@@ -256,7 +256,5 @@ function getRandomChest(): Chest {
     id: Math.random().toString(36).substring(2),
     x,
     y,
-    reward: 1 + Math.floor(Math.random() * 3),
-    difficulty: Math.floor(Math.random() * 3),
   };
 }

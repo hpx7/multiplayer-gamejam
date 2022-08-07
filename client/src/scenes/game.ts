@@ -11,7 +11,7 @@ import {
   ServerMessage,
   ServerMessageType,
 } from "../../../shared/messages";
-import { BlackBeardKillState, Chest, Difficulty, GameState, Player } from "../../../shared/state";
+import { BlackBeardKillState, Chest, GameState, Player } from "../../../shared/state";
 import { RoomConnection } from "../connection";
 
 export class GameScene extends Phaser.Scene {
@@ -21,8 +21,7 @@ export class GameScene extends Phaser.Scene {
   private buffer: InterpolationBuffer<GameState> | undefined;
 
   private players: Map<string, { sprite: Phaser.GameObjects.Sprite; name: Phaser.GameObjects.Text }> = new Map();
-  private chests: Map<string, { difficulty: Difficulty; reward: number; object: Phaser.GameObjects.Sprite }> =
-    new Map();
+  private chests: Map<string, { object: Phaser.GameObjects.Sprite }> = new Map();
 
   private gameStatus: string | undefined = undefined;
   private bbStatus: "enabled" | "disabled" | undefined;
@@ -367,10 +366,10 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private addChest({ id, x, y, reward, difficulty }: Chest) {
+  private addChest({ id, x, y }: Chest) {
     const chestSprite = new Phaser.GameObjects.Sprite(this, x, y, "chest");
     this.add.existing(chestSprite);
-    this.chests.set(id, { reward: reward, difficulty: difficulty, object: chestSprite });
+    this.chests.set(id, { object: chestSprite });
   }
 
   private addPlayer({ id, x, y, name, role }: Player) {
