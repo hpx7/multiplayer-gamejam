@@ -1,4 +1,4 @@
-import { register } from "@hathora/server-sdk";
+import { register, RoomId, UserId } from "@hathora/server-sdk";
 import dotenv from "dotenv";
 
 import mapData from "../shared/HAT_mainmap.json" assert { type: "json" };
@@ -10,9 +10,6 @@ import { USED_NAMES } from "./player/nameGenerator.js";
 import NPC, { isNpc } from "./player/npc.js";
 import HumanPlayer from "./player/realPlayer.js";
 import { getClosestTarget, dist, isBeachTile, pixelToTile, ServerState } from "./utils.js";
-
-type RoomId = bigint;
-type UserId = string;
 
 const NUM_CHESTS = 15;
 const NUM_PLAYERS = 10;
@@ -107,6 +104,8 @@ const coordinator = await register({
     },
   },
 });
+const { host, appId, storeId } = coordinator;
+console.log(`Connected to coordinator at ${host} with appId ${appId} and storeId ${storeId}`);
 
 function broadcastUpdates(roomId: RoomId) {
   const { subscribers, game } = states.get(roomId)!;
