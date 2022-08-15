@@ -6,7 +6,7 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@hathora/server-sdk": "^0.1.0",
+    "@hathora/server-sdk": "^0.1.2",
     "dotenv": "^16.0.1"
   },
   "devDependencies": {
