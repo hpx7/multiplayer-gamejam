@@ -3,18 +3,13 @@ on:
   push:
     branches:
       - develop
-
-env:
-  APP_SECRET: ${{ secrets.APP_SECRET }}
-  APP_ID: 7618e69eae1004611859f8b2d14c53ccad90a87f4d1444ef445b958e935d8594
-
 jobs:
   server:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: npm install hathora -g
-      - run: hathora cloud deploy --appName hathora-multiplayer-gamejam --token ${{ secrets.HATHORA_TOKEN }}
+      - run: npm install -g @hathora/cli
+      - run: hathora-cloud deploy --appId app-2b09ca32-1259-44a0-bbd9-c19787c5a0c3 --token ${{ secrets.HATHORA_CLOUD_TOKEN }}
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -24,7 +19,7 @@ jobs:
         working-directory: shared
       - run: npm install
         working-directory: client
-      - run: npm run build
+      - run: HATHORA_APP_ID=app-2b09ca32-1259-44a0-bbd9-c19787c5a0c3 npm run build
         working-directory: client
       - run: cp client/dist/index.html client/dist/200.html
       - run: surge client/dist hathora-multiplayer-gamejam.surge.sh
